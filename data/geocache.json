@@ -1,0 +1,312 @@
+{
+  "AVENIDA AFONSO PENA, 342 - CENTRO, BELO HORIZONTE": {
+    "lat": -19.9263151,
+    "lon": -43.9342489,
+    "matched": "AVENIDA AFONSO PENA, 342 - CENTRO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA CHAFARIZ, 4 - PETRÓPOLIS, BELO HORIZONTE": {
+    "lat": -20.0151498,
+    "lon": -44.0304026,
+    "matched": "RUA CHAFARIZ, 4 - PETRÓPOLIS, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA GONCALVES DIAS, 2051 - LOURDES, BELO HORIZONTE": {
+    "lat": -19.9304567,
+    "lon": -43.9404809,
+    "matched": "RUA GONCALVES DIAS, 2051 - LOURDES, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA SERGIPE, 64 - BOA VIAGEM, BELO HORIZONTE": {
+    "lat": -19.9313643,
+    "lon": -43.9365479,
+    "matched": "RUA SERGIPE, 64 - BOA VIAGEM, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA TRES MIL E SETENTA E QUATRO, 555 - PAULO VI, BELO HORIZONTE": {
+    "lat": -19.8425316,
+    "lon": -43.8880499,
+    "matched": "RUA TRES MIL E SETENTA E QUATRO, 555 - PAULO VI, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA FORMIGA, 50 - LAGOINHA, BELO HORIZONTE": {
+    "lat": -19.9042703,
+    "lon": -43.9467762,
+    "matched": "RUA FORMIGA, 50 - LAGOINHA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA HERCULANO SOARES ROCHA, 780 - IPÊ, BELO HORIZONTE": {
+    "lat": -19.8711374,
+    "lon": -43.9042134,
+    "matched": "RUA HERCULANO SOARES ROCHA, 780 - IPÊ, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA DAVID FONSECA, 1147 - MILIONÁRIOS, BELO HORIZONTE": {
+    "lat": -19.9208,
+    "lon": -43.9378,
+    "fallback": true
+  },
+  "RUA OLIMPIA, 18 - BOA VISTA, BELO HORIZONTE": {
+    "lat": -19.8912579,
+    "lon": -43.9056681,
+    "matched": "RUA OLIMPIA, 18 - BOA VISTA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA DOMINGOS PORTO, 135 - JARDIM MONTANHÊS, BELO HORIZONTE": {
+    "lat": -19.9062512,
+    "lon": -43.9851352,
+    "matched": "RUA DOMINGOS PORTO, 135 - JARDIM MONTANHÊS, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA PORTO, 470 - SÃO FRANCISCO, BELO HORIZONTE": {
+    "lat": -19.8767362,
+    "lon": -43.9591146,
+    "matched": "RUA PORTO, 470 - SÃO FRANCISCO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA VINTE E OITO DE SETEMBRO, 372 - ESPLANADA, BELO HORIZONTE": {
+    "lat": -19.9110478,
+    "lon": -43.9070201,
+    "matched": "RUA VINTE E OITO DE SETEMBRO, 372, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA PORTUGAL, 21 - JARDIM ATLÂNTICO, BELO HORIZONTE": {
+    "lat": -19.8395941,
+    "lon": -43.9909237,
+    "matched": "AVENIDA PORTUGAL, 21 - JARDIM ATLÂNTICO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA ALTAMIRO AVELINO SOARES, 256 - CASTELO, BELO HORIZONTE": {
+    "lat": -19.8842816,
+    "lon": -43.9967121,
+    "matched": "AVENIDA ALTAMIRO AVELINO SOARES, 256 - CASTELO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA MAURETTE JOSE DOS SANTOS, 600 - MANACÁS, BELO HORIZONTE": {
+    "lat": -19.8937818,
+    "lon": -43.9955595,
+    "matched": "AVENIDA MAURETTE JOSE DOS SANTOS, 600 - MANACÁS, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA SILVA LOBO, 1780 - NOVA GRANADA, BELO HORIZONTE": {
+    "lat": -19.9337118,
+    "lon": -43.97181,
+    "matched": "AVENIDA SILVA LOBO, 1780 - NOVA GRANADA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA OURO FINO, 40 - CRUZEIRO, BELO HORIZONTE": {
+    "lat": -19.9416288,
+    "lon": -43.9284926,
+    "matched": "RUA OURO FINO, 40 - CRUZEIRO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA TRES DE MAIO, 196 - SANTA HELENA, BELO HORIZONTE": {
+    "lat": -19.9834131,
+    "lon": -44.0132828,
+    "matched": "RUA TRES DE MAIO, 196 - SANTA HELENA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA GABRIELA DE MELO, 75 - OLHOS D'ÁGUA, BELO HORIZONTE": {
+    "lat": -19.9882951,
+    "lon": -43.9656055,
+    "matched": "RUA GABRIELA DE MELO, 75 - OLHOS D'ÁGUA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA SERRA DA AGUA QUENTE , 340 - DISTRITO INDUSTRIAL DO JATOBÁ, BELO HORIZONTE": {
+    "lat": -20.004375,
+    "lon": -44.0275968,
+    "matched": "RUA SERRA DA AGUA QUENTE , 340 - DISTRITO INDUSTRIAL DO JATOBÁ, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA CRISTIANO MOREIRA SALES, 296 - ESTORIL, BELO HORIZONTE": {
+    "lat": -19.9208,
+    "lon": -43.9378,
+    "fallback": true
+  },
+  "RUA MINERAIS, 375 - IGUAÇU, IPATINGA": {
+    "lat": -19.9208,
+    "lon": -43.9378,
+    "fallback": true
+  },
+  "RUA JOSE GONCALVES, 375 - BARREIRO, BELO HORIZONTE": {
+    "lat": -19.9757657,
+    "lon": -44.0225116,
+    "matched": "RUA JOSE GONCALVES, 375 - BARREIRO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA PRESIDENTE CARLOS LUZ, 3001 - CAIÇARAS, BELO HORIZONTE": {
+    "lat": -19.8902882,
+    "lon": -43.9678891,
+    "matched": "AVENIDA PRESIDENTE CARLOS LUZ, 3001 - CAIÇARAS, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA MANILA, 432 - HAVAÍ, BELO HORIZONTE": {
+    "lat": -19.9632497,
+    "lon": -43.9687234,
+    "matched": "RUA MANILA, 432 - HAVAÍ, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA PROFESSOR OTILIO MACEDO, 12 - PILAR, BELO HORIZONTE": {
+    "lat": -20.0007629,
+    "lon": -43.9724248,
+    "matched": "RUA PROFESSOR OTILIO MACEDO, 12 - PILAR, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA COMENDADOR ARTHUR VIANA, 405 - RIO BRANCO, BELO HORIZONTE": {
+    "lat": -19.8218846,
+    "lon": -43.9829927,
+    "matched": "RUA COMENDADOR ARTHUR VIANA, 405 - RIO BRANCO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA BERNARDO DE VASCONCELOS, 1377 - SANTA CRUZ, BELO HORIZONTE": {
+    "lat": -19.8757884,
+    "lon": -43.9293954,
+    "matched": "AVENIDA BERNARDO DE VASCONCELOS, 1377, Belo Horizonte, MG, Brasil"
+  },
+  "RUA DOS CAETES, 342 - CENTRO, BELO HORIZONTE": {
+    "lat": -19.9152634,
+    "lon": -43.9436658,
+    "matched": "RUA DOS CAETES, 342 - CENTRO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA AFONSO PENA, 1212 - CENTRO, BELO HORIZONTE": {
+    "lat": -19.9236999,
+    "lon": -43.9363439,
+    "matched": "AVENIDA AFONSO PENA, 1212 - CENTRO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA ESPIRITO SANTO, 605 - CENTRO, BELO HORIZONTE": {
+    "lat": -19.9208933,
+    "lon": -43.9377163,
+    "matched": "RUA ESPIRITO SANTO, 605 - CENTRO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA RIO DE JANEIRO, 1187 - CENTRO, BELO HORIZONTE": {
+    "lat": -19.925814,
+    "lon": -43.9404836,
+    "matched": "RUA RIO DE JANEIRO, 1187 - CENTRO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA SILVA LOBO, 1280 - NOVA GRANADA, BELO HORIZONTE": {
+    "lat": -19.9403663,
+    "lon": -43.9672161,
+    "matched": "AVENIDA SILVA LOBO, 1280 - NOVA GRANADA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA DO GARIMPO, 400 - OESTE, BELO HORIZONTE": {
+    "lat": -19.9354647,
+    "lon": -44.0038798,
+    "matched": "RUA DO GARIMPO, 400 - OESTE, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA AFONSO PENA, 1500 - CENTRO, BELO HORIZONTE": {
+    "lat": -19.9256585,
+    "lon": -43.9349312,
+    "matched": "AVENIDA AFONSO PENA, 1500 - CENTRO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA NELSON DE PAULA PIRES, 325 - PONGELUPE, BELO HORIZONTE": {
+    "lat": -20.0090118,
+    "lon": -44.0065117,
+    "matched": "RUA NELSON DE PAULA PIRES, 325 - PONGELUPE, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA AUGUSTO DE LIMA, 30 - CENTRO, BELO HORIZONTE": {
+    "lat": -19.924795,
+    "lon": -43.9368925,
+    "matched": "AVENIDA AUGUSTO DE LIMA, 30 - CENTRO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA PRESIDENTE ANTONIO CARLOS, 7596 - SÃO LUÍZ, BELO HORIZONTE": {
+    "lat": -19.8507172,
+    "lon": -43.9642018,
+    "matched": "AVENIDA PRESIDENTE ANTONIO CARLOS, 7596 - SÃO LUÍZ, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA DOS GUAJAJARAS, 1107 - LOURDES, BELO HORIZONTE": {
+    "lat": -19.9244001,
+    "lon": -43.944775,
+    "matched": "RUA DOS GUAJAJARAS, 1107 - LOURDES, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA DO CONTORNO, 6664 - SAVASSI, BELO HORIZONTE": {
+    "lat": -19.9391832,
+    "lon": -43.9410763,
+    "matched": "AVENIDA DO CONTORNO, 6664 - SAVASSI, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA BOGARI, 36 - NOVA SUISSA, BELO HORIZONTE": {
+    "lat": -19.9310855,
+    "lon": -43.9724711,
+    "matched": "RUA BOGARI, 36 - NOVA SUISSA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA NOSSA SENHORA DE FATIMA, 2240 - NOSSA SENHORA DE FÁTIMA, BELO HORIZONTE": {
+    "lat": -19.9366687,
+    "lon": -43.9045978,
+    "matched": "RUA NOSSA SENHORA DE FATIMA, 2240 - NOSSA SENHORA DE FÁTIMA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA ENGENHEIRO CARLOS GOULART, 900 - BURITIS, BELO HORIZONTE": {
+    "lat": -19.9693266,
+    "lon": -43.9623357,
+    "matched": "AVENIDA ENGENHEIRO CARLOS GOULART, 900 - BURITIS, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA PASTOR MURYLLO CASSETE, 20 - SÃO BERNARDO, BELO HORIZONTE": {
+    "lat": -19.8508306,
+    "lon": -43.9348193,
+    "matched": "RUA PASTOR MURYLLO CASSETE, 20 - SÃO BERNARDO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA MAJOR DELFINO DE PAULA, 2553 - SÃO FRANCISCO, BELO HORIZONTE": {
+    "lat": -19.9208,
+    "lon": -43.9378,
+    "fallback": true
+  },
+  "RUA NELSON DE SENNA, 120 - CINQUENTENÁRIO, BELO HORIZONTE": {
+    "lat": -19.9208,
+    "lon": -43.9378,
+    "fallback": true
+  },
+  "RUA JULITA NUNES LIMA, 147 - CONJUNTO MINASCAIXA, BELO HORIZONTE": {
+    "lat": -19.803883,
+    "lon": -43.9563017,
+    "matched": "RUA JULITA NUNES LIMA, 147 - CONJUNTO MINASCAIXA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA CORONEL JOAQUIM TIBURCIO, 850 - HELIÓPOLIS, BELO HORIZONTE": {
+    "lat": -19.8400458,
+    "lon": -43.9410822,
+    "matched": "RUA CORONEL JOAQUIM TIBURCIO, 850 - HELIÓPOLIS, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA GUARARAPES, 1810 - PINDORAMA, BELO HORIZONTE": {
+    "lat": -19.9094075,
+    "lon": -44.0193189,
+    "matched": "RUA GUARARAPES, 1810 - PINDORAMA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "BECO DONA BENTA, 145 - NOSSA SENHORA DE FÁTIMA, BELO HORIZONTE": {
+    "lat": -19.9342069,
+    "lon": -43.9050256,
+    "matched": "BECO DONA BENTA, 145 - NOSSA SENHORA DE FÁTIMA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA JOAO FERREIRA DA SILVA, 1700 - MARIA HELENA, BELO HORIZONTE": {
+    "lat": -19.8004155,
+    "lon": -43.9958786,
+    "matched": "RUA JOAO FERREIRA DA SILVA, 1700 - MARIA HELENA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA COSTA DO MARFIM, 480 - HAVAÍ, BELO HORIZONTE": {
+    "lat": -19.9645011,
+    "lon": -43.9674845,
+    "matched": "AVENIDA COSTA DO MARFIM, 480 - HAVAÍ, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA JOSE BASILIO, 100 - PARQUE SÃO JOSÉ, BELO HORIZONTE": {
+    "lat": -19.9659397,
+    "lon": -43.9803299,
+    "matched": "RUA JOSE BASILIO, 100 - PARQUE SÃO JOSÉ, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA ANIS, 147 - BELMONTE, BELO HORIZONTE": {
+    "lat": -19.8464624,
+    "lon": -43.9015783,
+    "matched": "RUA ANIS, 147 - BELMONTE, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA TIZIU, 175 - GOIÂNIA, BELO HORIZONTE": {
+    "lat": -19.8661355,
+    "lon": -43.8989273,
+    "matched": "RUA TIZIU, 175 - GOIÂNIA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA SAO TOMAZ DE AQUINO, 640 - SANTA RITA DE CÁSSIA, BELO HORIZONTE": {
+    "lat": -19.954359,
+    "lon": -43.9416228,
+    "matched": "RUA SAO TOMAZ DE AQUINO, 640 - SANTA RITA DE CÁSSIA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA DOS TIMBIRAS, 628 - FUNCIONÁRIOS, BELO HORIZONTE": {
+    "lat": -19.9289819,
+    "lon": -43.9305583,
+    "matched": "RUA DOS TIMBIRAS, 628 - FUNCIONÁRIOS, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA OTAVIANO DE CARVALHO, 174 - VILA PINHO, BELO HORIZONTE": {
+    "lat": -20.0013061,
+    "lon": -44.0257097,
+    "matched": "RUA OTAVIANO DE CARVALHO, 174 - VILA PINHO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA ALVARES CABRAL, 217 - CENTRO, BELO HORIZONTE": {
+    "lat": -19.924659,
+    "lon": -43.9357105,
+    "matched": "AVENIDA ALVARES CABRAL, 217 - CENTRO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA BOA VISTA, 189 - SÃO JOÃO BATISTA, BELO HORIZONTE": {
+    "lat": -19.8191939,
+    "lon": -43.9557246,
+    "matched": "RUA BOA VISTA, 189 - SÃO JOÃO BATISTA, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA NEBLINA, 120 - CONJUNTO PAULO VI, BELO HORIZONTE": {
+    "lat": -19.8323585,
+    "lon": -43.8874468,
+    "matched": "RUA NEBLINA, 120 - CONJUNTO PAULO VI, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA PADRE JULIO MARIA, 1550 - ALTO VERA CRUZ, BELO HORIZONTE": {
+    "lat": -19.9146305,
+    "lon": -43.8887917,
+    "matched": "RUA PADRE JULIO MARIA, 1550 - ALTO VERA CRUZ, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  }
+}
