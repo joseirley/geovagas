@@ -616,6 +616,7 @@
     async function loadVagas() {
       try {
         const resp = await fetch('/api/vagas');
+        if (!resp.ok) throw new Error(`GO BH respondeu com status ${resp.status}`);
         allVagas = await resp.json();
         popularFiltros(allVagas);
         aplicarFiltros();
@@ -824,8 +825,12 @@
       btn.disabled = true;
       btn.textContent = '⏳ Sincronizando com a PBH...';
       try {
-        await fetch('/api/sync', { method: 'POST' });
-        await loadVagas();
+        const resp = await fetch('/api/sync', { method: 'POST' });
+        if (!resp.ok) throw new Error(`Não foi possível atualizar (HTTP ${resp.status})`);
+        const result = await resp.json();
+        allVagas = result.vagas;
+        popularFiltros(allVagas);
+        aplicarFiltros();
         alert('Dados atualizados com sucesso da PBH!');
       } catch (e) {
         alert('Falha ao atualizar dados: ' + e);

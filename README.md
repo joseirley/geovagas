@@ -39,10 +39,16 @@ O projeto utiliza como fonte inicial os dados abertos oficiais da **Prefeitura d
 - **Mapas**: [Leaflet.js](https://leafletjs.com/) e [Leaflet.markercluster](https://github.com/Leaflet/Leaflet.markercluster) com base OpenStreetMap.
 - **Backend / Servidor**: Python 3 nativo (`http.server` / `socketserver`), leve e sem dependências pesadas obrigatórias.
 - **Raspagem & Geocodificação**: Python (`urllib`, `json`, `ssl`) consumindo a API oficial da PBH com resolução de coordenadas via OpenStreetMap/Nominatim e cache local persistente.
+- **Deploy na Vercel**: funções Python em `api/` consultam o GO BH sob demanda. Os pontos geográficos usam o cache incluído no projeto; endereços ainda não encontrados no cache aparecem no centro de Belo Horizonte.
 
 ---
 
 ## 🚀 Como Executar
+
+### Deploy na Vercel
+Importe este repositório como um projeto Vercel, mantendo a raiz do projeto como diretório de deploy. A configuração em `vercel.json` publica a página estática e as rotas `/api/vagas` e `/api/sync` como funções Python. Não é necessário configurar build command, dependências Python externas ou variáveis de ambiente.
+
+As vagas são consultadas na API do GO BH quando a página carrega; a resposta pode ficar em cache na borda por até 5 minutos. O botão de atualização faz uma nova consulta. A Vercel não persiste arquivos gravados pela função, então a atualização não grava `data/vagas.json`.
 
 ### Opção 1: Atalho Rápido no Windows (Recomendado)
 Basta dar dois cliques no arquivo:
