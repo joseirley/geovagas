@@ -54,8 +54,7 @@ def _normalize(item, detail, cache):
     titulo = ocupacao.get("ocupacao_descricao") or ocupacao.get("descricao") or f"Vaga #{vid}"
     titulo = re.sub(r"\s+", " ", str(titulo)).strip()
     horario = _text(horario_local.get("horario_trabalho"))
-    horario_key = horario.casefold()
-    horario = {"manha": "Manhã", "manhã": "Manhã", "tarde": "Tarde", "indiferente": "Indiferente / A combinar"}.get(horario_key, horario)
+    horario = {"manha": "Manhã", "manhã": "Manhã", "tarde": "Tarde", "indiferente": "Indiferente / A combinar"}.get(horario.casefold(), horario)
     carga_raw = horario_local.get("carga_horaria")
     if isinstance(carga_raw, dict):
         carga = carga_raw.get("nome") or (str(carga_raw.get("hora_semanal")) + " horas semanais" if carga_raw.get("hora_semanal") else "Não informado")
@@ -83,6 +82,7 @@ def fetch_vagas():
     """Read current open opportunities and enrich them with their detail records."""
     listing = _json_get("https://gobh-api.pbh.gov.br/api/vagas/?page=1&take=100&situacao=ABERTA")
     items = listing.get("results", [])
+    cache = _geocache()
 
     def fetch_detail(item):
         try:
@@ -91,6 +91,5 @@ def fetch_vagas():
             detail = item
         return _normalize(item, detail, cache)
 
-    cache = _geocache()
     with ThreadPoolExecutor(max_workers=12) as pool:
         return list(pool.map(fetch_detail, items))

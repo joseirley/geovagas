@@ -1,7 +1,7 @@
 import json
 from http.server import BaseHTTPRequestHandler
 
-from _gobh import fetch_vagas
+from lib.gobh import fetch_vagas
 
 
 class handler(BaseHTTPRequestHandler):

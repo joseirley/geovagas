@@ -616,13 +616,15 @@
     async function loadVagas() {
       try {
         const resp = await fetch('/api/vagas');
-        if (!resp.ok) throw new Error(`GO BH respondeu com status ${resp.status}`);
-        allVagas = await resp.json();
+        const body = await resp.json();
+        if (!resp.ok) throw new Error(body.detail || body.error || `A API respondeu com status ${resp.status}`);
+        if (!Array.isArray(body)) throw new Error(body.detail || body.error || 'A API não retornou uma lista de vagas.');
+        allVagas = body;
         popularFiltros(allVagas);
         aplicarFiltros();
       } catch (err) {
         console.error('Erro ao carregar vagas:', err);
-        document.getElementById('badge-total').textContent = 'Erro ao carregar dados';
+        document.getElementById('badge-total').textContent = `Erro ao carregar vagas: ${err.message}`;
       }
     }
 
@@ -826,8 +828,9 @@
       btn.textContent = '⏳ Sincronizando com a PBH...';
       try {
         const resp = await fetch('/api/sync', { method: 'POST' });
-        if (!resp.ok) throw new Error(`Não foi possível atualizar (HTTP ${resp.status})`);
         const result = await resp.json();
+        if (!resp.ok) throw new Error(result.detail || result.error || `Não foi possível atualizar (HTTP ${resp.status})`);
+        if (!Array.isArray(result.vagas)) throw new Error('A resposta da API não contém a lista de vagas. Reinicie o servidor local e tente novamente.');
         allVagas = result.vagas;
         popularFiltros(allVagas);
         aplicarFiltros();

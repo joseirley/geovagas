@@ -1,0 +1,1 @@
+"""Shared GeoVagas backend helpers."""
