@@ -35,9 +35,10 @@
     "matched": "RUA HERCULANO SOARES ROCHA, 780 - IPÊ, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
   },
   "RUA DAVID FONSECA, 1147 - MILIONÁRIOS, BELO HORIZONTE": {
-    "lat": -19.9208,
-    "lon": -43.9378,
-    "fallback": true
+    "lat": -19.9843851,
+    "lon": -44.0016454,
+    "matched": "Rua Davi Fonseca (segmento da via, distrito Milionários)",
+    "source": "photon"
   },
   "RUA OLIMPIA, 18 - BOA VISTA, BELO HORIZONTE": {
     "lat": -19.8912579,
@@ -100,14 +101,16 @@
     "matched": "RUA SERRA DA AGUA QUENTE , 340 - DISTRITO INDUSTRIAL DO JATOBÁ, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
   },
   "RUA CRISTIANO MOREIRA SALES, 296 - ESTORIL, BELO HORIZONTE": {
-    "lat": -19.9208,
-    "lon": -43.9378,
-    "fallback": true
+    "lat": -19.9675986,
+    "lon": -43.9578524,
+    "matched": "Rua Cristiano Teixeira Sales",
+    "source": "photon"
   },
   "RUA MINERAIS, 375 - IGUAÇU, IPATINGA": {
-    "lat": -19.9208,
-    "lon": -43.9378,
-    "fallback": true
+    "lat": -19.4739752,
+    "lon": -42.5490957,
+    "matched": "RUA MINERAIS, 375 - IGUAÇU, IPATINGA, Minas Gerais, Brasil",
+    "source": "nominatim"
   },
   "RUA JOSE GONCALVES, 375 - BARREIRO, BELO HORIZONTE": {
     "lat": -19.9757657,
@@ -220,14 +223,16 @@
     "matched": "RUA PASTOR MURYLLO CASSETE, 20 - SÃO BERNARDO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
   },
   "RUA MAJOR DELFINO DE PAULA, 2553 - SÃO FRANCISCO, BELO HORIZONTE": {
-    "lat": -19.9208,
-    "lon": -43.9378,
-    "fallback": true
+    "lat": -19.8793223,
+    "lon": -43.9577846,
+    "matched": "Rua Major Delfino de Paula Ricardo",
+    "source": "photon"
   },
   "RUA NELSON DE SENNA, 120 - CINQUENTENÁRIO, BELO HORIZONTE": {
-    "lat": -19.9208,
-    "lon": -43.9378,
-    "fallback": true
+    "lat": -19.9579272,
+    "lon": -43.9843589,
+    "matched": "Rua Nelson de Sena",
+    "source": "photon"
   },
   "RUA JULITA NUNES LIMA, 147 - CONJUNTO MINASCAIXA, BELO HORIZONTE": {
     "lat": -19.803883,
@@ -308,5 +313,20 @@
     "lat": -19.9146305,
     "lon": -43.8887917,
     "matched": "RUA PADRE JULIO MARIA, 1550 - ALTO VERA CRUZ, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "AVENIDA NOSSA SENHORA DE FATIMA, 2283 - CARLOS PRATES, BELO HORIZONTE": {
+    "lat": -19.9181993,
+    "lon": -43.9597088,
+    "matched": "AVENIDA NOSSA SENHORA DE FATIMA, 2283 - CARLOS PRATES, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
+  },
+  "RUA CANAAN, 365 - GRAJAÚ, BELO HORIZONTE": {
+    "lat": -19.9891204,
+    "lon": -44.0445597,
+    "matched": "RUA CANAAN, 365, Belo Horizonte, MG, Brasil"
+  },
+  "RUA FLOR DE TIPOANA, 88 - OURO PRETO, BELO HORIZONTE": {
+    "lat": -19.8709618,
+    "lon": -43.9896155,
+    "matched": "RUA FLOR DE TIPOANA, 88 - OURO PRETO, BELO HORIZONTE, Belo Horizonte, MG, Brasil"
   }
 }

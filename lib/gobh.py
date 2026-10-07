@@ -10,7 +10,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GEO_CACHE = os.path.join(ROOT, "data", "geocache.json")
-FALLBACK = (-19.9208, -43.9378)
 SSL_CONTEXT = ssl.create_default_context()
 USER_AGENT = "GeoVagas/1.0 (consulta de oportunidades públicas)"
 
@@ -30,8 +29,12 @@ def _geocache():
 
 
 def _coordinates(address, cache):
-    item = cache.get((address or "").strip().upper(), {})
-    return item.get("lat", FALLBACK[0]), item.get("lon", FALLBACK[1])
+    item = cache.get((address or "").strip().upper())
+    if not item:
+        return None, None
+    if item.get("fallback"):
+        return None, None
+    return item.get("lat"), item.get("lon")
 
 
 def _text(value, default="Não informado"):

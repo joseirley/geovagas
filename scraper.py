@@ -9,6 +9,8 @@ import re
 import urllib.request
 import urllib.parse
 import ssl
+import unicodedata
+import re
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -41,47 +43,88 @@ def geocode_address(address_str, cache):
     Usa cache para evitar chamadas de rede repetidas.
     """
     if not address_str:
-        return -19.9208, -43.9378 # Praça Sete (Centro de BH como fallback)
+        return None, None
     
     clean_addr = address_str.strip().upper()
-    if clean_addr in cache:
-        return cache[clean_addr]["lat"], cache[clean_addr]["lon"]
+    cached = cache.get(clean_addr)
+    if cached and not cached.get("fallback"):
+        return cached["lat"], cached["lon"]
     
-    # Tentativas de busca do mais específico ao mais geral
+    # The source address already contains its city. Avoid appending BH twice,
+    # which caused Nominatim to miss valid addresses and cache the city center.
+    place = clean_addr.rsplit(",", 1)[-1].strip()
+    address_part = clean_addr.rsplit(",", 1)[0].strip() if "," in clean_addr else clean_addr
+    city = place or "BELO HORIZONTE"
     queries = [
-        f"{clean_addr}, Belo Horizonte, MG, Brasil",
+        f"{address_part}, {city}, Minas Gerais, Brasil",
+        f"{address_part.split(' - ', 1)[0]}, {city}, Minas Gerais, Brasil",
     ]
-    
-    # Se tem traço ou vírgula, tenta logradouro + número
-    if "-" in clean_addr:
-        parts = clean_addr.split("-")
-        queries.append(f"{parts[0].strip()}, Belo Horizonte, MG, Brasil")
     
     headers = {"User-Agent": "GeoVagas-App/1.0 (contato@geovagas.com.br)"}
     
-    for q in queries:
-        url = f"https://nominatim.openstreetmap.org/search?format=json&q={urllib.parse.quote(q)}&limit=1"
+    for q in dict.fromkeys(queries):
+        params = urllib.parse.urlencode({"format": "jsonv2", "addressdetails": 1, "q": q, "limit": 3, "countrycodes": "br"})
+        url = f"https://nominatim.openstreetmap.org/search?{params}"
         try:
             req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req, context=ssl_context, timeout=5) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 if data and len(data) > 0:
-                    lat = float(data[0]["lat"])
-                    lon = float(data[0]["lon"])
-                    cache[clean_addr] = {"lat": lat, "lon": lon, "matched": q}
-                    save_geocache(cache)
-                    time.sleep(1.0) # Respeito ao limite do Nominatim
-                    return lat, lon
+                    for result in data:
+                        result_address = result.get("address", {})
+                        result_city = (result_address.get("city") or result_address.get("town") or result_address.get("municipality") or "").casefold()
+                        if city.casefold() not in result_city and city.casefold() not in result.get("display_name", "").casefold():
+                            continue
+                        lat, lon = float(result["lat"]), float(result["lon"])
+                        cache[clean_addr] = {"lat": lat, "lon": lon, "matched": q, "source": "nominatim"}
+                        save_geocache(cache)
+                        time.sleep(1.1) # Nominatim public usage limit
+                        return lat, lon
         except Exception as e:
             print(f"Erro ao geocodificar '{q}': {e}")
             time.sleep(0.5)
 
-    # Fallback padrão caso não encontre nas buscas do OpenStreetMap
-    # Centro de Belo Horizonte (Praça Sete / Afonso Pena) com leve variação aleatória para não sobrepor
-    default_lat, default_lon = -19.9208, -43.9378
-    cache[clean_addr] = {"lat": default_lat, "lon": default_lon, "fallback": True}
+    # Photon can resolve street names absent from Nominatim's address index.
+    # Accept only results in the requested municipality and matching street.
+    try:
+        params = urllib.parse.urlencode({"q": address_str + ", Minas Gerais, Brasil", "limit": 10, "lang": "en"})
+        req = urllib.request.Request(f"https://photon.komoot.io/api/?{params}", headers=headers)
+        with urllib.request.urlopen(req, context=ssl_context, timeout=8) as resp:
+            features = json.loads(resp.read().decode("utf-8")).get("features", [])
+        wanted_street = address_part.split(",", 1)[0].split(" - ", 1)[0].strip()
+        wanted_street = re.sub(r",?\s*\d+\s*$", "", wanted_street)
+        norm = lambda value: " ".join("".join(c for c in unicodedata.normalize("NFKD", str(value).casefold()) if not unicodedata.combining(c)).split())
+        wanted_words = set(norm(wanted_street).split())
+        candidates = []
+        for feature in features:
+            props = feature.get("properties", {})
+            geometry = feature.get("geometry", {})
+            coords = geometry.get("coordinates", [])
+            result_city = props.get("city", "")
+            result_street = props.get("street") or props.get("name") or ""
+            result_words = set(norm(result_street).split())
+            overlap = len(wanted_words & result_words) / max(1, len(wanted_words))
+            if len(coords) < 2 or norm(city) not in norm(result_city) or props.get("countrycode", "").upper() != "BR" or overlap < 0.5:
+                continue
+            score = overlap
+            if props.get("type") in {"street", "house"}:
+                score += 0.2
+            requested_number = re.search(r"\b(\d+)\b", address_part)
+            if requested_number and props.get("housenumber") == requested_number.group(1):
+                score += 0.5
+            candidates.append((score, (float(coords[1]), float(coords[0])), props))
+        if candidates:
+            _, (lat, lon), props = max(candidates, key=lambda candidate: candidate[0])
+            cache[clean_addr] = {"lat": lat, "lon": lon, "matched": props.get("name") or props.get("street"), "source": "photon"}
+            save_geocache(cache)
+            return lat, lon
+    except Exception as e:
+        print(f"Erro no geocoder alternativo para '{address_str}': {e}")
+
+    # Keep unresolved locations out of the map instead of misplacing them at Praça Sete.
+    cache[clean_addr] = {"lat": None, "lon": None, "fallback": True}
     save_geocache(cache)
-    return default_lat, default_lon
+    return None, None
 
 def scrape_vagas(progress_callback=None):
     """
