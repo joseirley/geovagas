@@ -432,6 +432,197 @@
       font-weight: 600;
       font-size: 12px;
     }
+
+    /* Layout mobile: filtros recolhíveis e conteúdo em fluxo vertical. */
+    details.sidebar-filters {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .sidebar-filters > summary {
+      display: none;
+    }
+
+    @media (max-width: 760px) {
+      body {
+        display: block;
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+
+      aside.sidebar {
+        width: 100%;
+        min-width: 0;
+        border-right: 0;
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .sidebar-header {
+        padding: 10px 16px;
+      }
+
+      .sidebar-header img {
+        max-height: 38px;
+      }
+
+      details.sidebar-filters {
+        display: block;
+        flex: none;
+      }
+
+      .sidebar-filters > summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 48px;
+        padding: 0 16px;
+        color: var(--primary);
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        list-style: none;
+      }
+
+      .sidebar-filters > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .sidebar-filters > summary::after {
+        content: '+';
+        font-size: 1.25rem;
+        line-height: 1;
+      }
+
+      .sidebar-filters[open] > summary::after {
+        content: '−';
+      }
+
+      .sidebar-filters:not([open]) > .sidebar-content,
+      .sidebar-filters:not([open]) > .sidebar-footer {
+        display: none;
+      }
+
+      .sidebar-content {
+        padding: 12px 16px 16px;
+        gap: 12px;
+        overflow: visible;
+      }
+
+      .sidebar-footer {
+        padding: 10px 16px;
+      }
+
+      main.main-content {
+        display: flex;
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+      }
+
+      header.topbar {
+        height: auto;
+        min-height: 0;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 16px;
+      }
+
+      .topbar-title {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .topbar-title h1 {
+        font-size: 1.05rem;
+        line-height: 1.35;
+      }
+
+      .badge-count {
+        font-size: 0.75rem;
+      }
+
+      .topbar-disclaimer {
+        align-items: flex-start;
+        width: 100%;
+        padding: 7px 9px;
+        font-size: 0.72rem;
+        line-height: 1.4;
+      }
+
+      #map-wrapper {
+        flex: none;
+        width: 100%;
+        height: clamp(340px, 55svh, 520px);
+        min-height: 340px;
+      }
+
+      .table-section {
+        flex: none;
+        width: 100%;
+        height: auto;
+        min-height: 360px;
+        overflow: visible;
+      }
+
+      .table-header-bar {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+        padding: 12px 14px;
+      }
+
+      .table-header-bar > div {
+        flex-wrap: wrap;
+        gap: 6px !important;
+      }
+
+      .table-header-bar > div > span:last-child {
+        display: none;
+      }
+
+      .table-container {
+        flex: none;
+        max-height: none;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      table.vagas-table {
+        min-width: 900px;
+        font-size: 0.8rem;
+      }
+
+      table.vagas-table th,
+      table.vagas-table td {
+        padding: 9px 10px;
+      }
+
+      .leaflet-popup-content {
+        min-width: 0;
+        width: min(250px, calc(100vw - 90px));
+      }
+    }
+
+    @media (max-width: 380px) {
+      .topbar-title h1 {
+        font-size: 0.98rem;
+      }
+
+      #map-wrapper {
+        height: 48svh;
+        min-height: 320px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -446,6 +637,8 @@
       </div>
     </div>
 
+    <details class="sidebar-filters" open>
+    <summary>Filtros de Vagas</summary>
     <div class="sidebar-content">
       <div class="filter-section-title">
         <span>Filtros de Vagas</span>
@@ -526,6 +719,7 @@
         Contato: <a href="mailto:jose.geografo@gmail.com" style="color: #1e40af; text-decoration: none; font-weight: 600;">jose.geografo@gmail.com</a>
       </div>
     </div>
+    </details>
   </aside>
 
   <!-- ÁREA PRINCIPAL: TOPBAR + MAPA + TABELA -->
@@ -845,6 +1039,11 @@
 
     // INICIAR APLICAÇÃO
     window.addEventListener('DOMContentLoaded', () => {
+      const filtersPanel = document.querySelector('.sidebar-filters');
+      const mobileLayout = window.matchMedia('(max-width: 760px)');
+      const syncFiltersPanel = () => { filtersPanel.open = !mobileLayout.matches; };
+      syncFiltersPanel();
+      mobileLayout.addEventListener('change', syncFiltersPanel);
       initMap();
       loadVagas();
     });
