@@ -16,7 +16,6 @@ from urllib.request import Request, urlopen
 
 HOURS_OLD = 144
 RESULTS_WANTED = 300
-SEARCH_BATCH_SIZE = 50
 CACHE_TTL_SECONDS = 3600
 SUPPORTED_SITES = {"linkedin", "indeed", "glassdoor"}
 SITE_CONFIG = {
@@ -240,11 +239,11 @@ def _geocode_municipality(city, state):
         return coordinates
 
 
-def _query_cache_key(site, term, location, fetch_description, offset):
-    return (site, _fold(term), _fold(location), HOURS_OLD, RESULTS_WANTED, SEARCH_BATCH_SIZE, offset, bool(fetch_description))
+def _query_cache_key(site, term, location, fetch_description):
+    return (site, _fold(term), _fold(location), HOURS_OLD, RESULTS_WANTED, bool(fetch_description))
 
 
-def search_jobs(site, search_term, location, fetch_description=False, now=None, offset=0):
+def search_jobs(site, search_term, location, fetch_description=False, now=None):
     """Query exactly one JobSpy platform, validate, geocode, and cache output."""
     site = str(site or "").casefold().strip()
     if site not in SUPPORTED_SITES:
@@ -254,14 +253,7 @@ def search_jobs(site, search_term, location, fetch_description=False, now=None, 
         raise ValueError("Informe um cargo ou palavra-chave para pesquisar.")
     if len(term) > 160 or len(location) > 160:
         raise ValueError("Os campos de busca devem ter no máximo 160 caracteres.")
-    try:
-        offset = int(offset)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("Página de resultados inválida.") from exc
-    if offset < 0 or offset >= RESULTS_WANTED or offset % SEARCH_BATCH_SIZE:
-        raise ValueError("Página de resultados inválida.")
-    batch_size = min(SEARCH_BATCH_SIZE, RESULTS_WANTED - offset)
-    key = _query_cache_key(site, term, location, fetch_description, offset)
+    key = _query_cache_key(site, term, location, fetch_description)
     current_time = time_module.time()
     with _CACHE_LOCK:
         cached = _CACHE.get(key)
@@ -272,7 +264,7 @@ def search_jobs(site, search_term, location, fetch_description=False, now=None, 
 
     kwargs = {
         "site_name": [site], "search_term": term, "location": location or "Brazil",
-        "hours_old": HOURS_OLD, "results_wanted": batch_size, "offset": offset,
+        "hours_old": HOURS_OLD, "results_wanted": RESULTS_WANTED,
         "fetch_description": bool(fetch_description), "verbose": 0,
     }
     if SITE_CONFIG[site]["country_indeed"]:
@@ -283,8 +275,7 @@ def search_jobs(site, search_term, location, fetch_description=False, now=None, 
         collected_at = collected_at.replace(tzinfo=timezone.utc)
     collected_at = collected_at.astimezone(timezone.utc)
     rows = frame.to_dict(orient="records") if hasattr(frame, "to_dict") else list(frame or [])
-    batch_rows = rows[:batch_size]
-    normalized = [_normalize_record(row, site, collected_at) for row in batch_rows]
+    normalized = [_normalize_record(row, site, collected_at) for row in rows[:RESULTS_WANTED]]
 
     # Deduplicate only by validated normalized ad URL; retain same-title postings.
     unique, seen_urls = [], set()
@@ -319,18 +310,14 @@ def search_jobs(site, search_term, location, fetch_description=False, now=None, 
         if key_loc:
             job["latitude"], job["longitude"] = locations[key_loc]
 
-    next_offset = offset + min(len(rows), batch_size)
-    has_more = len(rows) >= batch_size and next_offset < RESULTS_WANTED
     status = "sem_resultados" if not unique else "concluida"
     payload = {
         "source": site, "status": status, "collected_count": len(unique),
         "recent_count": len(recent), "unconfirmed_count": len(unconfirmed),
-        "recent_jobs": recent, "unconfirmed_jobs": unconfirmed,
+        "recent_jobs": recent[:RESULTS_WANTED], "unconfirmed_jobs": unconfirmed[:RESULTS_WANTED],
         "map_unlocated_count": sum(job["latitude"] is None for job in recent),
         "collected_at": collected_at.isoformat(), "hours_old": HOURS_OLD,
-        "results_wanted": RESULTS_WANTED, "batch_size": batch_size,
-        "offset": offset, "next_offset": next_offset, "has_more": has_more,
-        "cache_ttl_seconds": CACHE_TTL_SECONDS,
+        "results_wanted": RESULTS_WANTED, "cache_ttl_seconds": CACHE_TTL_SECONDS,
         "cached": False,
     }
     with _CACHE_LOCK:
