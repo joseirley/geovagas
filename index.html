@@ -430,10 +430,10 @@
     .job-status:empty { display:none; }
     .search-progress { display:grid; gap:6px; margin-top:7px; }
     .search-progress-track { height:9px; overflow:hidden; background:#dbeafe; border-radius:999px; }
-    .search-progress-track::after { content:""; display:block; width:38%; height:100%; background:#2563eb; border-radius:inherit; animation:search-progress-slide 1.35s ease-in-out infinite; }
+    .search-progress-fill { height:100%; background:#2563eb; border-radius:inherit; transition:width .9s ease; }
+    .search-progress-percent { color:#1e3a8a; font-size:.8rem; font-weight:700; font-variant-numeric:tabular-nums; }
     .search-progress-time { color:#64748b; font-size:.78rem; font-variant-numeric:tabular-nums; }
-    @keyframes search-progress-slide { from { transform:translateX(-110%); } to { transform:translateX(275%); } }
-    @media (prefers-reduced-motion: reduce) { .search-progress-track::after { animation:none; width:100%; opacity:.65; } }
+    @media (prefers-reduced-motion: reduce) { .search-progress-fill { transition:none; } }
 
     /* POPUP LEAFLET ESTILIZADO */
     .leaflet-popup-content-wrapper {
@@ -873,9 +873,11 @@
       return `${String(Math.floor(seconds / 60)).padStart(2,'0')}:${String(seconds % 60).padStart(2,'0')}`;
     }
     function renderSearchProgress(source, state) {
-      const elapsed = formatElapsed(Date.now() - state.loadingStartedAt);
+      const elapsedMs = Date.now() - state.loadingStartedAt;
+      const elapsed = formatElapsed(elapsedMs);
       const label = sourceLabel(source);
-      document.getElementById('job-status').innerHTML = `<div>Consultando ${label}...</div><div class="search-progress"><div class="search-progress-track" role="progressbar" aria-label="Busca em andamento no ${label}" aria-valuetext="Consulta em andamento"></div><div class="search-progress-time" aria-live="off">Tempo decorrido: ${elapsed}</div></div>`;
+      const percent = Math.max(1, Math.min(95, Math.round(95 * (1 - Math.exp(-elapsedMs / 20000)))));
+      document.getElementById('job-status').innerHTML = `<div>Consultando ${label}...</div><div class="search-progress"><div class="search-progress-track" role="progressbar" aria-label="Progresso estimado da busca no ${label}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" aria-valuetext="Aproximadamente ${percent}%"><div class="search-progress-fill" style="width:${percent}%"></div></div><div class="search-progress-percent" aria-live="off">Progresso estimado: ${percent}%</div><div class="search-progress-time" aria-live="off">Tempo decorrido: ${elapsed}. O percentual é uma estimativa.</div></div>`;
     }
     function normalizeGeoName(value) { return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLocaleLowerCase('pt-BR'); }
     function formatPostedDate(value) {
