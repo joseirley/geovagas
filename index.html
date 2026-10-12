@@ -222,6 +222,9 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      flex: 1;
+      min-width: 0;
+      flex-wrap: wrap;
     }
 
     .topbar-title h1 {
@@ -239,6 +242,13 @@
       font-weight: 700;
       border: 1px solid #bfdbfe;
     }
+
+    .topbar-title .job-progress { padding:4px 7px; border:1px solid #e2e8f0; border-radius:6px; background:#f8fafc; }
+    .topbar-title .job-progress > div:first-child { color:#334155; font-size:.7rem; font-weight:700; }
+    .topbar-title .search-progress { width:205px; display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:3px 7px; margin-top:3px; }
+    .topbar-title .search-progress-track { grid-column:1 / -1; height:5px; }
+    .topbar-title .search-progress-percent { font-size:.66rem; }
+    .topbar-title .search-progress-time { font-size:.61rem; line-height:1.1; text-align:right; white-space:nowrap; }
 
     .topbar-disclaimer {
       display: flex;
@@ -811,6 +821,7 @@
       <div class="topbar-title">
         <h1>Encontre a oportunidade no mapa</h1>
         <span id="badge-total" class="badge-count">Carregando vagas...</span>
+        <div id="job-progress" class="job-status job-progress" aria-live="polite"></div>
       </div>
       <div class="topbar-disclaimer">
         <span id="topbar-source-label" class="topbar-source-label">Dados oficiais: PBH (GO BH)</span>
@@ -833,7 +844,6 @@
     <!-- TABELA ABAIXO DO MAPA -->
     <section class="table-section">
       <div class="results-summary">
-        <div id="job-progress" class="job-status job-progress" aria-live="polite"></div>
         <div id="job-status" class="job-status" aria-live="polite"></div>
         <div id="table-count-label" class="results-summary-count"></div>
       </div>
@@ -903,9 +913,9 @@
       const expectedMs = state.estimatedDurationMs || 60000;
       const percent = Math.max(1, Math.min(95, Math.round(95 * elapsedMs / expectedMs)));
       const estimate = elapsedMs <= expectedMs
-        ? `Retorno estimado em aproximadamente ${formatElapsed(expectedMs - elapsedMs)}.`
-        : 'A consulta ultrapassou a estimativa inicial; aguardando resposta da plataforma.';
-      document.getElementById('job-progress').innerHTML = `<div>Consultando ${label}...</div><div class="search-progress"><div class="search-progress-track" role="progressbar" aria-label="Progresso estimado da busca no ${label}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" aria-valuetext="Aproximadamente ${percent}%"><div class="search-progress-fill" style="width:${percent}%"></div></div><div class="search-progress-percent" aria-live="off">Progresso estimado: ${percent}%</div><div class="search-progress-time" aria-live="off">Decorrido: ${elapsed}. ${estimate}</div></div>`;
+        ? `ETA ${formatElapsed(expectedMs - elapsedMs)}`
+        : 'acima da previsão';
+      document.getElementById('job-progress').innerHTML = `<div>Consultando ${label}...</div><div class="search-progress" title="Previsão ajustada conforme consultas anteriores desta plataforma"><div class="search-progress-track" role="progressbar" aria-label="Progresso estimado da busca no ${label}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" aria-valuetext="Aproximadamente ${percent}%"><div class="search-progress-fill" style="width:${percent}%"></div></div><div class="search-progress-percent" aria-live="off">${percent}%</div><div class="search-progress-time" aria-live="off">${elapsed} • ${estimate}</div></div>`;
     }
     function getExpectedSearchDuration(source) {
       try { return Math.max(15000, Number(localStorage.getItem(`geovagas-search-ms-${source}`)) || 60000); }
