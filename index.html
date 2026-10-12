@@ -428,6 +428,12 @@
     .source-notice.active { display:block; }
     .job-status { padding:8px 18px; font-size:.85rem; color:#334155; background:#f8fafc; }
     .job-status:empty { display:none; }
+    .search-progress { display:grid; gap:6px; margin-top:7px; }
+    .search-progress-track { height:9px; overflow:hidden; background:#dbeafe; border-radius:999px; }
+    .search-progress-track::after { content:""; display:block; width:38%; height:100%; background:#2563eb; border-radius:inherit; animation:search-progress-slide 1.35s ease-in-out infinite; }
+    .search-progress-time { color:#64748b; font-size:.78rem; font-variant-numeric:tabular-nums; }
+    @keyframes search-progress-slide { from { transform:translateX(-110%); } to { transform:translateX(275%); } }
+    @media (prefers-reduced-motion: reduce) { .search-progress-track::after { animation:none; width:100%; opacity:.65; } }
 
     /* POPUP LEAFLET ESTILIZADO */
     .leaflet-popup-content-wrapper {
@@ -858,9 +864,19 @@
       RJ:'Rio de Janeiro', RN:'Rio Grande do Norte', RS:'Rio Grande do Sul', RO:'Rondônia',
       RR:'Roraima', SC:'Santa Catarina', SP:'São Paulo', SE:'Sergipe', TO:'Tocantins'
     };
-    const sourceStates = Object.fromEntries(['linkedin','indeed','glassdoor'].map(source => [source, {recent:[], unconfirmed:[], result:null, term:'', location:'', listPage:1, mapSelection:null, showUnconfirmed:false, searchToken:0, loading:false, message:''}]));
+    const sourceStates = Object.fromEntries(['linkedin','indeed','glassdoor'].map(source => [source, {recent:[], unconfirmed:[], result:null, term:'', location:'', listPage:1, mapSelection:null, showUnconfirmed:false, searchToken:0, loading:false, loadingStartedAt:0, message:''}]));
 
     function safeText(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function sourceLabel(source) { return ({linkedin:'LinkedIn',indeed:'Indeed',glassdoor:'Glassdoor'})[source] || source; }
+    function formatElapsed(milliseconds) {
+      const seconds = Math.floor(Math.max(0, milliseconds) / 1000);
+      return `${String(Math.floor(seconds / 60)).padStart(2,'0')}:${String(seconds % 60).padStart(2,'0')}`;
+    }
+    function renderSearchProgress(source, state) {
+      const elapsed = formatElapsed(Date.now() - state.loadingStartedAt);
+      const label = sourceLabel(source);
+      document.getElementById('job-status').innerHTML = `<div>Consultando ${label}...</div><div class="search-progress"><div class="search-progress-track" role="progressbar" aria-label="Busca em andamento no ${label}" aria-valuetext="Consulta em andamento"></div><div class="search-progress-time" aria-live="off">Tempo decorrido: ${elapsed}</div></div>`;
+    }
     function normalizeGeoName(value) { return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLocaleLowerCase('pt-BR'); }
     function formatPostedDate(value) {
       if (!value) return 'Sem data';
@@ -1125,7 +1141,7 @@
       renderExternalTable(source, selected);
       const result = state.result;
       if (state.loading) {
-        document.getElementById('job-status').textContent = `Consultando ${source[0].toUpperCase()+source.slice(1)}...`;
+        renderSearchProgress(source, state);
       } else if (result) {
         const count = result.recent_count;
         const status = result.status === 'sem_resultados' ? 'Consulta concluída sem resultados.' : `${result.collected_count} registro${result.collected_count===1?'':'s'} coletado${result.collected_count===1?'':'s'}; ${count} vaga${count===1?'':'s'} recente${count===1?'':'s'} encontrada${count===1?'':'s'}${count===300?' — limite de resultados atingido.':'.'}`;
@@ -1208,6 +1224,7 @@
       state.recent = []; state.unconfirmed = []; state.result = null; state.listPage = 1; state.mapSelection = null;
       const requestToken = ++state.searchToken;
       state.loading = true;
+      state.loadingStartedAt = Date.now();
       state.message = `Consultando ${source[0].toUpperCase()+source.slice(1)}...`;
       updateExternalSearchControls(source);
       renderExternal(source);
@@ -1232,6 +1249,7 @@
       } finally {
         if (state.searchToken === requestToken) {
           state.loading = false;
+          state.loadingStartedAt = 0;
           if (state.result) state.message = '';
           if (activeSource === source) { updateExternalSearchControls(source); renderExternal(source); }
         }
@@ -1244,6 +1262,7 @@
       const state = sourceStates[source];
       state.searchToken += 1;
       state.loading = false;
+      state.loadingStartedAt = 0;
       state.message = 'Busca limpa. Informe um cargo e uma localização para iniciar nova consulta.';
       state.term = '';
       state.location = '';
@@ -1270,6 +1289,12 @@
       externalCircles = new Map();
       map.setView([-14.2,-51.9],4);
     }
+
+    setInterval(() => {
+      if (activeSource === 'gobh') return;
+      const state = sourceStates[activeSource];
+      if (state.loading) renderSearchProgress(activeSource, state);
+    }, 1000);
 
     function focarVagaNoMapa(vagaId) {
       const marker = markersMap[vagaId];
