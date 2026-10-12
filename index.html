@@ -340,7 +340,7 @@
     .autocomplete-menu { position:absolute; z-index:1500; top:calc(100% + 3px); left:0; right:0; max-height:240px; overflow:auto; padding:4px; background:#fff; border:1px solid #cbd5e1; border-radius:7px; box-shadow:0 8px 20px rgba(15,23,42,.14); }
     .autocomplete-menu[hidden] { display:none; }
     .autocomplete-option { display:block; width:100%; padding:8px 10px; border:0; border-radius:4px; background:#fff; color:#1e293b; text-align:left; font:500 .86rem 'Inter',sans-serif; cursor:pointer; }
-    .autocomplete-option:hover, .autocomplete-option:focus { background:#fff; color:#334155; outline:none; box-shadow:inset 0 0 0 1px #e2e8f0; }
+    .autocomplete-option:hover, .autocomplete-option:focus { background:#fff; color:var(--primary); outline:none; box-shadow:inset 0 0 0 1px #e2e8f0; }
     .autocomplete-empty { padding:9px 10px; color:#64748b; font-size:.82rem; }
 
     .table-header-bar h3 {
@@ -447,17 +447,18 @@
     .source-notice { display:none; padding:10px 12px; color:#475569; font-size:.78rem; background:#fffbeb; border:1px solid #fde68a; border-radius:6px; line-height:1.45; }
     .source-notice.active { display:block; }
     .job-status { padding:8px 18px; font-size:.85rem; color:#334155; background:#f8fafc; }
-    .sidebar-content .job-status { padding:8px 10px; border:1px solid #e2e8f0; border-radius:6px; }
+    .sidebar-content .job-status { padding:7px 9px; border:1px solid #e2e8f0; border-radius:6px; }
     .job-status:empty { display:none; }
     .results-summary { padding:9px 18px; background:#f8fafc; border-bottom:1px solid var(--border-color); color:#334155; }
+    .results-summary .job-status { padding:0; }
     .results-summary-count { margin-top:4px; color:#1e293b; font-size:.84rem; font-weight:600; }
     .period-warning { color:#9a3412; font-size:.76rem; font-weight:600; line-height:1.35; }
     .period-warning[hidden] { display:none; }
-    .search-progress { display:grid; gap:6px; margin-top:7px; }
-    .search-progress-track { height:9px; overflow:hidden; background:#dbeafe; border-radius:999px; }
+    .search-progress { display:grid; gap:4px; margin-top:5px; }
+    .search-progress-track { height:7px; overflow:hidden; background:#dbeafe; border-radius:999px; }
     .search-progress-fill { height:100%; background:#2563eb; border-radius:inherit; transition:width .9s ease; }
-    .search-progress-percent { color:#1e3a8a; font-size:.8rem; font-weight:700; font-variant-numeric:tabular-nums; }
-    .search-progress-time { color:#64748b; font-size:.78rem; font-variant-numeric:tabular-nums; }
+    .search-progress-percent { color:#1e3a8a; font-size:.74rem; font-weight:700; font-variant-numeric:tabular-nums; }
+    .search-progress-time { color:#64748b; font-size:.68rem; line-height:1.3; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
     @media (prefers-reduced-motion: reduce) { .search-progress-fill { transition:none; } }
 
     /* POPUP LEAFLET ESTILIZADO */
@@ -800,7 +801,7 @@
         <button id="job-clear" class="clear-search" type="button">Limpar busca</button>
       </div>
       <div id="source-notice" class="source-notice">A consulta busca anúncios publicados nos últimos 3 dias por padrão, com limite de até 300 vagas por plataforma. Você pode escolher 7 dias; nesse período, o desempenho da busca pode ser afetado. A quantidade encontrada depende da disponibilidade e das limitações da fonte; os resultados não representam necessariamente todas as vagas existentes.</div>
-      <div id="job-status" class="job-status" aria-live="polite"></div>
+      <div id="job-progress" class="job-status" aria-live="polite"></div>
     </div>
     </details>
   </aside>
@@ -833,6 +834,7 @@
     <!-- TABELA ABAIXO DO MAPA -->
     <section class="table-section">
       <div class="results-summary">
+        <div id="job-status" class="job-status" aria-live="polite"></div>
         <div id="table-count-label" class="results-summary-count"></div>
       </div>
       <div class="table-header-bar">
@@ -903,7 +905,7 @@
       const estimate = elapsedMs <= expectedMs
         ? `Retorno estimado em aproximadamente ${formatElapsed(expectedMs - elapsedMs)}.`
         : 'A consulta ultrapassou a estimativa inicial; aguardando resposta da plataforma.';
-      document.getElementById('job-status').innerHTML = `<div>Consultando ${label}...</div><div class="search-progress"><div class="search-progress-track" role="progressbar" aria-label="Progresso estimado da busca no ${label}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" aria-valuetext="Aproximadamente ${percent}%"><div class="search-progress-fill" style="width:${percent}%"></div></div><div class="search-progress-percent" aria-live="off">Progresso estimado: ${percent}%</div><div class="search-progress-time" aria-live="off">Tempo decorrido: ${elapsed}. ${estimate} A estimativa se ajusta às consultas anteriores desta plataforma.</div></div>`;
+      document.getElementById('job-progress').innerHTML = `<div>Consultando ${label}...</div><div class="search-progress"><div class="search-progress-track" role="progressbar" aria-label="Progresso estimado da busca no ${label}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" aria-valuetext="Aproximadamente ${percent}%"><div class="search-progress-fill" style="width:${percent}%"></div></div><div class="search-progress-percent" aria-live="off">Progresso estimado: ${percent}%</div><div class="search-progress-time" aria-live="off">Decorrido: ${elapsed}. ${estimate}</div></div>`;
     }
     function getExpectedSearchDuration(source) {
       try { return Math.max(15000, Number(localStorage.getItem(`geovagas-search-ms-${source}`)) || 60000); }
@@ -1048,6 +1050,7 @@
         updateExternalSearchControls(source);
         renderExternal(source);
       } else {
+        document.getElementById('job-progress').textContent = '';
         document.getElementById('job-status').textContent = '';
         popularFiltros(allVagas);
         aplicarFiltros();
@@ -1272,13 +1275,17 @@
       if (state.loading) {
         renderSearchProgress(source, state);
       } else if (result) {
+        document.getElementById('job-progress').textContent = '';
         const count = locationScoped.length;
         const status = result.status === 'sem_resultados' ? 'Consulta concluída sem resultados.' : `${result.collected_count} registro${result.collected_count===1?'':'s'} coletado${result.collected_count===1?'':'s'}; ${count} vaga${count===1?'':'s'} exibida${count===1?'':'s'} para o filtro atual${result.collected_count>=result.results_wanted?' — limite de resultados atingido.':'.'}`;
         const unconfirmed = result.unconfirmed_count ? ` ${result.unconfirmed_count} registro${result.unconfirmed_count===1?'':'s'} com data de publicação não confirmada.` : '';
         const missingMunicipalities = result.unlocated_municipality_count ?? result.map_unlocated_count ?? 0;
         const unlocated = missingMunicipalities ? ` ${missingMunicipalities} município${missingMunicipalities===1?'':'s'} sem geolocalização.` : ' Todos os municípios localizados.';
         document.getElementById('job-status').textContent = `${status}${unconfirmed}${unlocated}${result.cached?' (resultado em cache)':''}`;
-      } else document.getElementById('job-status').textContent = state.message;
+      } else {
+        document.getElementById('job-progress').textContent = '';
+        document.getElementById('job-status').textContent = state.message;
+      }
       const mapJobs = locationScoped.filter(j => j.latitude != null && j.longitude != null);
       if (markersCluster) markersCluster.clearLayers();
       if (circleLayer) map.removeLayer(circleLayer);
@@ -1326,27 +1333,21 @@
       document.getElementById('export-xlsx').disabled = exportRows.length === 0;
       document.getElementById('badge-total').textContent = `${selected.length} vagas nesta seleção`;
       const missingMunicipalities = new Set(selected.filter(j=>j.latitude == null || j.longitude == null).map(j=>`${j.state}|${normalizeGeoName(j.city)}`).filter(key=>key !== '|')).size;
-      const displayed = Math.min(selected.length,state.listPage*50);
       const found = state.result?.collected_count ?? 0;
-      document.getElementById('table-count-label').textContent = `Encontrados na consulta: ${found} • Exibidos na lista: ${displayed} • ${missingMunicipalities} município${missingMunicipalities===1?'':'s'} sem geolocalização na lista`;
+      const mapped = selected.filter(j=>j.latitude != null && j.longitude != null).length;
+      document.getElementById('table-count-label').textContent = `Encontrados na consulta: ${found} • Exibidos na lista: ${selected.length} • Registros localizados no mapa: ${mapped} • ${missingMunicipalities} município${missingMunicipalities===1?'':'s'} sem geolocalização`;
 
       const tbody = document.getElementById('vagas-tbody');
       document.querySelector('#vagas-table thead').innerHTML = '<tr><th>Cargo</th><th>Empresa</th><th>Localização</th><th>Data de publicação</th><th>Fonte</th><th>Validação</th><th>Anúncio</th></tr>';
       tbody.innerHTML = '';
       if (!selected.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#64748b">Nenhuma vaga nesta localização. Faça uma busca ou clique fora dos pontos para ver todas.</td></tr>'; return; }
-      selected.slice(0,state.listPage*50).forEach(job => {
+      selected.forEach(job => {
         const tr = document.createElement('tr');
         const dateLabel = job.date_status === 'recent' ? 'Recente confirmada' : 'Data não confirmada';
         const links = [job.job_url && `<a class="btn-apply" rel="noopener noreferrer" target="_blank" href="${safeText(job.job_url)}">Ver anúncio ↗</a>`, job.job_url_direct && `<a target="_blank" rel="noopener noreferrer" href="${safeText(job.job_url_direct)}">Link direto</a>`].filter(Boolean).join(' ');
         tr.innerHTML = `<td>${safeText(job.title)}</td><td>${safeText(job.company)}</td><td>${safeText(job.location)}</td><td>${safeText(formatPostedDate(job.date_posted))}</td><td>${safeText(job.source)}</td><td>${safeText(dateLabel)}</td><td>${links || 'Link indisponível'}</td>`;
         tbody.appendChild(tr);
       });
-      if (selected.length > state.listPage*50) {
-        const more = document.createElement('tr');
-        more.innerHTML = '<td colspan="7" style="text-align:center"><button type="button" class="btn-apply">Carregar mais vagas</button></td>';
-        more.querySelector('button').addEventListener('click', () => { state.listPage += 1; renderExternal(source); });
-        tbody.appendChild(more);
-      }
     }
 
     async function searchExternal() {
@@ -1372,6 +1373,7 @@
       state.term = term; state.location = location;
       state.hoursOld = Number(document.getElementById('job-period').value) === 168 ? 168 : 72;
       state.recent = []; state.unconfirmed = []; state.result = null; state.listPage = 1; state.mapSelection = null;
+      document.getElementById('job-status').textContent = '';
       const requestToken = ++state.searchToken;
       state.loading = true;
       state.loadingStartedAt = Date.now();
@@ -1446,6 +1448,7 @@
       searchButton.disabled = false;
       searchButton.textContent = 'Buscar nesta plataforma';
       document.getElementById('job-status').textContent = '';
+      document.getElementById('job-progress').textContent = '';
       document.getElementById('badge-total').textContent = 'Busca limpa';
       document.getElementById('table-count-label').textContent = '';
       document.querySelector('#vagas-table thead').innerHTML = '<tr><th>Cargo</th><th>Empresa</th><th>Localização</th><th>Data de publicação</th><th>Fonte</th><th>Validação</th><th>Anúncio</th></tr>';
