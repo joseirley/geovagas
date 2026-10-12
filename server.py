@@ -8,7 +8,9 @@ import socketserver
 import os
 import json
 import webbrowser
+from urllib.parse import parse_qs, urlsplit
 import scraper
+from lib.external_jobs import search_jobs
 
 PORT = 8501
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -39,8 +41,30 @@ class GeoVagasHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(vagas, ensure_ascii=False).encode("utf-8"))
             return
 
+        if urlsplit(self.path).path == "/api/busca":
+            try:
+                query = parse_qs(urlsplit(self.path).query)
+                result = search_jobs(
+                    query.get("site", [""])[0], query.get("search_term", [""])[0],
+                    query.get("location", [""])[0],
+                    query.get("fetch_description", ["false"])[0].lower() == "true",
+                )
+                self._json(200, result)
+            except ValueError as exc:
+                self._json(400, {"error": str(exc)})
+            except Exception as exc:
+                self._json(502, {"error": "Não foi possível consultar esta plataforma no momento."})
+            return
+
         # Demais arquivos estáticos (static/, logo/, etc.)
         return super().do_GET()
+
+    def _json(self, status, payload):
+        self.send_response(status)
+        self.send_header("Content-type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
 
     def do_POST(self):
         # Sincronização forçada com o GO BH

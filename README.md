@@ -39,14 +39,24 @@ O projeto utiliza como fonte inicial os dados abertos oficiais da **Prefeitura d
 - **Mapas**: [Leaflet.js](https://leafletjs.com/) e [Leaflet.markercluster](https://github.com/Leaflet/Leaflet.markercluster) com base OpenStreetMap.
 - **Backend / Servidor**: Python 3 nativo (`http.server` / `socketserver`), leve e sem dependências pesadas obrigatórias.
 - **Raspagem & Geocodificação**: Python (`urllib`, `json`, `ssl`) consumindo a API oficial da PBH com resolução de coordenadas via OpenStreetMap/Nominatim e cache local persistente.
-- **Deploy na Vercel**: funções Python em `api/` consultam o GO BH sob demanda. Os pontos geográficos usam o cache incluído no projeto; endereços ainda não encontrados no cache aparecem no centro de Belo Horizonte.
+- **Deploy na Vercel**: funções Python em `api/` consultam o GO BH sob demanda e disponibilizam a busca JobSpy das fontes externas.
+
+### Fontes externas
+
+As abas LinkedIn, Indeed e Glassdoor consultam uma fonte por vez pelo endpoint `GET /api/busca`. O JobSpy está fixado em `requirements.txt` (Python 3.10+). Cada busca solicita até 300 resultados e `hours_old=144`; Indeed e Glassdoor recebem `country_indeed="Brazil"`. A descrição completa fica desativada para evitar requisições extras por anúncio.
+
+O backend valida `date_posted` em UTC, exclui datas comprovadamente antigas e futuras, e mantém datas ausentes ou impossíveis de validar em uma lista separada. Datas sem horário só são marcadas recentes quando o dia inteiro cabe dentro da janela de 144 horas. Os resultados de cada parâmetro de busca ficam em cache de processo por até 60 minutos. A Vercel executa funções de até 60 segundos nesta configuração; bloqueios, lentidão ou indisponibilidade da plataforma aparecem como falha da fonte consultada.
+
+O mapa externo abre na visão do Brasil e agrega vagas por município, apenas quando cidade e estado são reconhecidos e o geocodificador confirma a localização. Todos os municípios distintos das vagas recentes são geocodificados, com cache persistente local e intervalo compatível com o serviço público; vagas sem data confirmada permanecem na lista sem chamadas extras de geocodificação. Municípios sem coordenadas confirmadas permanecem na lista e são contabilizados no aviso. A lista mostra 50 registros por vez e permite carregar mais. O cache de buscas é temporário e pode desaparecer entre execuções serverless.
+
+Para executar localmente com as fontes externas, use Python 3.10 ou superior e instale `requirements.txt` antes de iniciar `server.py`. A pasta `publicacao-dominio` também usa essa dependência e requer Python 3.10+ com Passenger/WSGI. Hospedagens limitadas ao Python 3.6 não são compatíveis com JobSpy.
 
 ---
 
 ## 🚀 Como Executar
 
 ### Deploy na Vercel
-Importe este repositório como um projeto Vercel, mantendo a raiz do projeto como diretório de deploy. A configuração em `vercel.json` publica a página estática e as rotas `/api/vagas` e `/api/sync` como funções Python. Não é necessário configurar build command, dependências Python externas ou variáveis de ambiente.
+Importe este repositório como um projeto Vercel, mantendo a raiz do projeto como diretório de deploy. A configuração em `vercel.json` publica a página estática e as rotas `/api/vagas`, `/api/sync` e `/api/busca` como funções Python. Não é necessário configurar um build command ou variáveis de ambiente; a Vercel instala a dependência listada em `requirements.txt`.
 
 As vagas são consultadas na API do GO BH quando a página carrega; a resposta pode ficar em cache na borda por até 5 minutos. O botão de atualização faz uma nova consulta. A Vercel não persiste arquivos gravados pela função, então a atualização não grava `data/vagas.json`.
 
@@ -54,15 +64,19 @@ As vagas são consultadas na API do GO BH quando a página carrega; a resposta p
 Basta dar dois cliques no arquivo:
 👉 **`iniciar_geovagas.bat`**
 
-O script irá validar os dados, iniciar o servidor web e abrir automaticamente a página no seu navegador.
+O script verifica Python 3.10+, cria o ambiente local `.venv`, instala JobSpy se necessário, inicia o servidor e abre a página no navegador.
 
 ### Opção 2: Linha de Comando (Terminal)
-1. Certifique-se de ter o Python 3 instalado.
-2. Inicie o servidor:
+1. Certifique-se de ter Python 3.10 ou superior instalado.
+2. Instale as dependências:
+   ```bash
+   python -m pip install -r requirements.txt
+   ```
+3. Inicie o servidor:
    ```bash
    python server.py
    ```
-3. Acesse no navegador:
+4. Acesse no navegador:
    ```
    http://localhost:8501
    ```

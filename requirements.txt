@@ -1,0 +1,2 @@
+# JobSpy requires Python 3.10+; Vercel and local Python deployments use this file.
+python-jobspy==1.3.0
