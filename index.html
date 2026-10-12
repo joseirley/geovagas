@@ -799,7 +799,7 @@
         <button id="job-search">Buscar nesta plataforma</button>
         <button id="job-clear" class="clear-search" type="button">Limpar busca</button>
       </div>
-      <div id="source-notice" class="source-notice">A consulta busca anúncios publicados nos últimos 3 dias por padrão, com limite de até 300 vagas por plataforma. Você pode escolher 7 dias; nesse período, o desempenho da busca pode ser afetado. A quantidade encontrada depende da disponibilidade e das limitações da fonte; os resultados não representam necessariamente todas as vagas existentes.<br><br><strong>A consulta pode demorar alguns instantes, pois depende do tempo de resposta da plataforma. As buscas por Estado podem levar mais tempo, mas permitem visualizar como as vagas do cargo se distribuem pelo território.</strong></div>
+      <div id="source-notice" class="source-notice">A consulta busca anúncios publicados nos últimos 3 dias por padrão, com limite de até 300 vagas por plataforma. Você pode escolher 7 dias; nesse período, o desempenho da busca pode ser afetado. A quantidade encontrada depende da disponibilidade e das limitações da fonte; os resultados não representam necessariamente todas as vagas existentes.</div>
       <div id="job-status" class="job-status" aria-live="polite"></div>
     </div>
     </details>
@@ -898,8 +898,16 @@
       const elapsedMs = Date.now() - state.loadingStartedAt;
       const elapsed = formatElapsed(elapsedMs);
       const label = sourceLabel(source);
-      const percent = Math.max(1, Math.min(95, Math.round(95 * (1 - Math.exp(-elapsedMs / 20000)))));
-      document.getElementById('job-status').innerHTML = `<div>Consultando ${label}...</div><div class="search-progress"><div class="search-progress-track" role="progressbar" aria-label="Progresso estimado da busca no ${label}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" aria-valuetext="Aproximadamente ${percent}%"><div class="search-progress-fill" style="width:${percent}%"></div></div><div class="search-progress-percent" aria-live="off">Progresso estimado: ${percent}%</div><div class="search-progress-time" aria-live="off">Tempo decorrido: ${elapsed}. O percentual é uma estimativa.</div></div>`;
+      const expectedMs = state.estimatedDurationMs || 60000;
+      const percent = Math.max(1, Math.min(95, Math.round(95 * elapsedMs / expectedMs)));
+      const estimate = elapsedMs <= expectedMs
+        ? `Retorno estimado em aproximadamente ${formatElapsed(expectedMs - elapsedMs)}.`
+        : 'A consulta ultrapassou a estimativa inicial; aguardando resposta da plataforma.';
+      document.getElementById('job-status').innerHTML = `<div>Consultando ${label}...</div><div class="search-progress"><div class="search-progress-track" role="progressbar" aria-label="Progresso estimado da busca no ${label}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" aria-valuetext="Aproximadamente ${percent}%"><div class="search-progress-fill" style="width:${percent}%"></div></div><div class="search-progress-percent" aria-live="off">Progresso estimado: ${percent}%</div><div class="search-progress-time" aria-live="off">Tempo decorrido: ${elapsed}. ${estimate} A estimativa se ajusta às consultas anteriores desta plataforma.</div></div>`;
+    }
+    function getExpectedSearchDuration(source) {
+      try { return Math.max(15000, Number(localStorage.getItem(`geovagas-search-ms-${source}`)) || 60000); }
+      catch { return 60000; }
     }
     function normalizeGeoName(value) { return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLocaleLowerCase('pt-BR'); }
     function formatPostedDate(value) {
@@ -1316,7 +1324,9 @@
       document.getElementById('export-xlsx').disabled = exportRows.length === 0;
       document.getElementById('badge-total').textContent = `${selected.length} vagas nesta seleção`;
       const missingMunicipalities = new Set(selected.filter(j=>j.latitude == null || j.longitude == null).map(j=>`${j.state}|${normalizeGeoName(j.city)}`).filter(key=>key !== '|')).size;
-      document.getElementById('table-count-label').textContent = `${selected.length} registros selecionados • exibindo ${Math.min(selected.length,state.listPage*50)} • ${missingMunicipalities} município${missingMunicipalities===1?'':'s'} sem geolocalização`;
+      const displayed = Math.min(selected.length,state.listPage*50);
+      const found = state.result?.collected_count ?? 0;
+      document.getElementById('table-count-label').textContent = `Encontrados na consulta: ${found} • Exibidos na lista: ${displayed} • ${missingMunicipalities} município${missingMunicipalities===1?'':'s'} sem geolocalização na lista`;
 
       const tbody = document.getElementById('vagas-tbody');
       document.querySelector('#vagas-table thead').innerHTML = '<tr><th>Cargo</th><th>Empresa</th><th>Localização</th><th>Data de publicação</th><th>Fonte</th><th>Validação</th><th>Anúncio</th></tr>';
@@ -1363,6 +1373,7 @@
       const requestToken = ++state.searchToken;
       state.loading = true;
       state.loadingStartedAt = Date.now();
+      state.estimatedDurationMs = getExpectedSearchDuration(source);
       state.message = `Consultando ${source[0].toUpperCase()+source.slice(1)}...`;
       updateExternalSearchControls(source);
       renderExternal(source);
@@ -1386,6 +1397,11 @@
         state.message = `Não foi possível consultar esta plataforma no momento. ${error.message}`;
       } finally {
         if (state.searchToken === requestToken) {
+          const elapsedMs = state.loadingStartedAt ? Date.now() - state.loadingStartedAt : 0;
+          if (state.result && elapsedMs > 0) {
+            const nextEstimate = Math.round(state.estimatedDurationMs * .7 + elapsedMs * .3);
+            try { localStorage.setItem(`geovagas-search-ms-${source}`, String(nextEstimate)); } catch { /* armazenamento local opcional */ }
+          }
           state.loading = false;
           state.loadingStartedAt = 0;
           if (state.result) state.message = '';
