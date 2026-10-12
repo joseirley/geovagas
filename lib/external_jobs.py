@@ -14,7 +14,7 @@ from urllib.parse import urlencode, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 
-HOURS_OLD = 144
+HOURS_OLD = 168
 RESULTS_WANTED = 100
 CACHE_TTL_SECONDS = 3600
 SUPPORTED_SITES = {"linkedin", "indeed", "glassdoor"}
@@ -102,9 +102,10 @@ def classify_date(value, now=None):
     parsed = parsed.astimezone(timezone.utc)
     if parsed > now:
         return "future", parsed.isoformat()
-    cutoff = now - timedelta(hours=HOURS_OLD)
     if date_only:
-        return ("recent", parsed.isoformat()) if parsed >= cutoff else ("unconfirmed", parsed.isoformat())
+        cutoff_day = now.date() - timedelta(days=6)
+        return ("recent", parsed.isoformat()) if parsed.date() >= cutoff_day else ("unconfirmed", parsed.isoformat())
+    cutoff = now - timedelta(hours=HOURS_OLD)
     if parsed >= cutoff:
         return "recent", parsed.isoformat()
     return "old", parsed.isoformat()
@@ -286,7 +287,7 @@ def search_jobs(site, search_term, location, fetch_description=False, now=None):
         if url:
             seen_urls.add(url)
         unique.append(job)
-    recent = sorted((job for job in unique if job["date_status"] == "recent"), key=lambda job: job["date_posted_utc"], reverse=True)
+    recent = sorted((job for job in unique if job["date_status"] == "recent"), key=lambda job: job["date_posted_utc"])
     unconfirmed = [job for job in unique if job["date_status"] == "unconfirmed"]
     locations = {}
     # Only geocode records visible by default. This avoids waiting for cities

@@ -778,10 +778,11 @@
       <div id="external-controls" class="external-controls">
         <div class="filter-group"><label for="job-term">Cargo / Área de trabalho</label><input id="job-term" type="text" maxlength="160" placeholder="Digite o cargo ou palavra-chave"></div>
         <div class="filter-group"><label for="job-location">Localização <span style="font-weight:500;color:#64748b">(Estado ou Município)</span></label><input id="job-location" type="text" maxlength="160" placeholder="Ex.: Minas Gerais ou Belo Horizonte" disabled></div>
+        <div class="filter-group"><label for="job-period">Período de publicação</label><select id="job-period"><option value="7" selected>Últimos 7 dias (padrão)</option><option value="3">Últimos 3 dias</option><option value="1">Últimas 24 horas</option></select></div>
         <button id="job-search">Buscar nesta plataforma</button>
         <button id="job-clear" class="clear-search" type="button">Limpar busca</button>
       </div>
-      <div id="source-notice" class="source-notice">Busca direcionada a vagas publicadas nas últimas 144 horas (6 dias), com até 100 resultados por plataforma. A quantidade efetivamente encontrada depende da disponibilidade e das limitações da fonte consultada. Os resultados não representam necessariamente todas as vagas existentes na plataforma.<br><br><strong>A consulta pode demorar alguns instantes, pois depende do tempo de resposta da plataforma. As buscas por estado podem levar mais tempo, mas permitem visualizar como as vagas do cargo se distribuem pelo território.</strong></div>
+      <div id="source-notice" class="source-notice">A busca coleta até 100 anúncios publicados nos últimos 7 dias. O período selecionado não altera a quantidade consultada no portal; ele apenas filtra quais anúncios coletados aparecem na lista e no mapa. Você pode escolher 7 dias (padrão), 3 dias ou 24 horas. A quantidade efetivamente encontrada depende da disponibilidade e das limitações da fonte; os resultados não representam necessariamente todas as vagas da plataforma.<br><br><strong>A consulta pode demorar alguns instantes, pois depende do tempo de resposta da plataforma. As buscas por estado podem levar mais tempo, mas permitem visualizar como as vagas do cargo se distribuem pelo território.</strong></div>
       <div id="job-status" class="job-status" aria-live="polite"></div>
     </div>
 
@@ -871,7 +872,7 @@
       RJ:'Rio de Janeiro', RN:'Rio Grande do Norte', RS:'Rio Grande do Sul', RO:'Rondônia',
       RR:'Roraima', SC:'Santa Catarina', SP:'São Paulo', SE:'Sergipe', TO:'Tocantins'
     };
-    const sourceStates = Object.fromEntries(['linkedin','indeed','glassdoor'].map(source => [source, {recent:[], unconfirmed:[], result:null, term:'', location:'', listPage:1, mapSelection:null, showUnconfirmed:false, searchToken:0, loading:false, loadingStartedAt:0, message:''}]));
+    const sourceStates = Object.fromEntries(['linkedin','indeed','glassdoor'].map(source => [source, {recent:[], unconfirmed:[], result:null, term:'', location:'', periodDays:7, listPage:1, mapSelection:null, showUnconfirmed:false, searchToken:0, loading:false, loadingStartedAt:0, message:''}]));
 
     function safeText(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function sourceLabel(source) { return ({linkedin:'LinkedIn',indeed:'Indeed',glassdoor:'Glassdoor'})[source] || source; }
@@ -895,6 +896,36 @@
       return new Intl.DateTimeFormat('pt-BR', dateOnly
         ? {day:'2-digit',month:'2-digit',year:'numeric',timeZone:'UTC'}
         : {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'UTC'}).format(parsed);
+    }
+    function isWithinExternalPeriod(job, days) {
+      const rawDate = job.date_posted_utc || job.date_posted;
+      if (!rawDate) return true;
+      const publishedAt = new Date(rawDate);
+      if (Number.isNaN(publishedAt.getTime())) return true;
+      const elapsed = Date.now() - publishedAt.getTime();
+      if (elapsed < 0) return false;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(String(job.date_posted || ''))) {
+        const publishedDay = Date.UTC(publishedAt.getUTCFullYear(), publishedAt.getUTCMonth(), publishedAt.getUTCDate());
+        const today = new Date();
+        const todayDay = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+        return Math.floor((todayDay - publishedDay) / 86400000) < days;
+      }
+      return elapsed <= days * 86400000;
+    }
+    function getExternalJobsForSource(source) {
+      const state = sourceStates[source];
+      const candidates = [...state.recent, ...(state.showUnconfirmed ? state.unconfirmed : [])];
+      return candidates.filter(job => isWithinExternalPeriod(job, state.periodDays));
+    }
+    function sortExternalJobsOldestFirst(jobs) {
+      return [...jobs].sort((a, b) => {
+        const aTime = a.date_posted_utc ? Date.parse(a.date_posted_utc) : NaN;
+        const bTime = b.date_posted_utc ? Date.parse(b.date_posted_utc) : NaN;
+        if (Number.isNaN(aTime) && Number.isNaN(bTime)) return 0;
+        if (Number.isNaN(aTime)) return 1;
+        if (Number.isNaN(bTime)) return -1;
+        return aTime - bTime;
+      });
     }
     function updateExternalSearchControls(source) {
       if (activeSource !== source || source === 'gobh') return;
@@ -924,6 +955,7 @@
         document.getElementById('job-term').value = sourceStates[source].term;
         document.getElementById('job-location').value = sourceStates[source].location;
         document.getElementById('job-location').disabled = !sourceStates[source].term.trim();
+        document.getElementById('job-period').value = String(sourceStates[source].periodDays);
         document.getElementById('show-unconfirmed').checked = sourceStates[source].showUnconfirmed;
         popularFiltros([]);
         updateExternalSearchControls(source);
@@ -1139,7 +1171,7 @@
       const state = sourceStates[source];
       const queryLocation = normalizeGeoName(state.location.split(/[;,|]/)[0]).replace(/^(estado de|state of|estado|state)\s+/, '');
       const requestedState = Object.keys(BRAZIL_STATES).find(code => normalizeGeoName(code) === queryLocation || normalizeGeoName(BRAZIL_STATES[code]) === queryLocation);
-      const allJobs = [...state.recent, ...(document.getElementById('show-unconfirmed').checked ? state.unconfirmed : [])];
+      const allJobs = getExternalJobsForSource(source);
       const stateMatches = requestedState ? allJobs.filter(job => job.state === requestedState) : [];
       const cityMatches = queryLocation ? allJobs.filter(job => normalizeGeoName(job.city) === queryLocation) : [];
       const locationScoped = requestedState ? stateMatches : cityMatches.length ? cityMatches : allJobs;
@@ -1151,8 +1183,9 @@
       if (state.loading) {
         renderSearchProgress(source, state);
       } else if (result) {
-        const count = result.recent_count;
-        const status = result.status === 'sem_resultados' ? 'Consulta concluída sem resultados.' : `${result.collected_count} registro${result.collected_count===1?'':'s'} coletado${result.collected_count===1?'':'s'}; ${count} vaga${count===1?'':'s'} recente${count===1?'':'s'} encontrada${count===1?'':'s'}${result.collected_count>=result.results_wanted?' — limite de resultados atingido.':'.'}`;
+        const count = locationScoped.length;
+        const periodLabel = state.periodDays === 1 ? 'nas últimas 24 horas' : `nos últimos ${state.periodDays} dias`;
+        const status = result.status === 'sem_resultados' ? 'Consulta concluída sem resultados.' : `${result.collected_count} registro${result.collected_count===1?'':'s'} coletado${result.collected_count===1?'':'s'}; ${count} vaga${count===1?'':'s'} no período selecionado (${periodLabel})${result.collected_count>=result.results_wanted?' — limite de resultados atingido.':'.'}`;
         const unconfirmed = result.unconfirmed_count ? ` ${result.unconfirmed_count} registro${result.unconfirmed_count===1?'':'s'} com data de publicação não confirmada.` : '';
         const unlocated = result.map_unlocated_count ? ` ${result.map_unlocated_count} sem município geolocalizado; permanecem na lista.` : '';
         document.getElementById('job-status').textContent = `${status}${unconfirmed}${unlocated}${result.cached?' (resultado em cache)':''}`;
@@ -1199,6 +1232,7 @@
 
     function renderExternalTable(source, selected) {
       const state = sourceStates[source];
+      selected = sortExternalJobsOldestFirst(selected);
       document.getElementById('badge-total').textContent = `${selected.length} vagas nesta seleção`;
       document.getElementById('table-count-label').textContent = `${selected.length} registros disponíveis; exibindo ${Math.min(selected.length,state.listPage*50)}; ${selected.filter(j=>j.latitude != null && j.longitude != null).length} localizados no mapa`;
 
@@ -1283,6 +1317,8 @@
       document.getElementById('job-term').value = '';
       document.getElementById('job-location').value = '';
       document.getElementById('job-location').disabled = true;
+      state.periodDays = 7;
+      document.getElementById('job-period').value = '7';
       document.getElementById('show-unconfirmed').checked = false;
       const searchButton = document.getElementById('job-search');
       searchButton.disabled = false;
@@ -1338,6 +1374,14 @@
     document.getElementById('job-term').addEventListener('input', e => { document.getElementById('job-location').disabled = !e.target.value.trim(); });
     document.getElementById('job-location').addEventListener('keydown', e => { if (e.key === 'Enter') searchExternal(); });
     document.getElementById('show-unconfirmed').addEventListener('change', e => { sourceStates[activeSource].showUnconfirmed = e.target.checked; sourceStates[activeSource].listPage = 1; renderExternal(activeSource); });
+    document.getElementById('job-period').addEventListener('change', e => {
+      if (activeSource === 'gobh') return;
+      const state = sourceStates[activeSource];
+      state.periodDays = Number(e.target.value) || 7;
+      state.listPage = 1;
+      state.mapSelection = null;
+      renderExternal(activeSource);
+    });
 
     document.getElementById('btn-reset').addEventListener('click', () => {
       document.getElementById('filtro-busca').value = '';
@@ -1447,7 +1491,7 @@
         state.mapSelection = null;
         state.listPage = 1;
         externalCircles.forEach(point => point.setStyle({color:'#1e40af', fillColor:'#3b82f6', fillOpacity:.78, opacity:1, weight:2}));
-        const allJobs = [...state.recent, ...(state.showUnconfirmed ? state.unconfirmed : [])];
+        const allJobs = getExternalJobsForSource(activeSource);
         const location = normalizeGeoName(state.location.split(/[;,|]/)[0]).replace(/^(estado de|state of|estado|state)\s+/, '');
         const requestedState = Object.keys(BRAZIL_STATES).find(code => normalizeGeoName(code) === location || normalizeGeoName(BRAZIL_STATES[code]) === location);
         const sameCity = location ? allJobs.filter(job => normalizeGeoName(job.city) === location) : [];
