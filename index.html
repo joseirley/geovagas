@@ -340,7 +340,7 @@
     .autocomplete-menu { position:absolute; z-index:1500; top:calc(100% + 3px); left:0; right:0; max-height:240px; overflow:auto; padding:4px; background:#fff; border:1px solid #cbd5e1; border-radius:7px; box-shadow:0 8px 20px rgba(15,23,42,.14); }
     .autocomplete-menu[hidden] { display:none; }
     .autocomplete-option { display:block; width:100%; padding:8px 10px; border:0; border-radius:4px; background:#fff; color:#1e293b; text-align:left; font:500 .86rem 'Inter',sans-serif; cursor:pointer; }
-    .autocomplete-option:hover, .autocomplete-option:focus { background:#eff6ff; color:#1e40af; outline:none; }
+    .autocomplete-option:hover, .autocomplete-option:focus { background:#fff; color:#334155; outline:none; box-shadow:inset 0 0 0 1px #e2e8f0; }
     .autocomplete-empty { padding:9px 10px; color:#64748b; font-size:.82rem; }
 
     .table-header-bar h3 {
@@ -795,7 +795,7 @@
         <div class="filter-group"><label for="job-period">Período das vagas</label><select id="job-period"><option value="72" selected>Últimos 3 dias</option><option value="168">Últimos 7 dias</option></select><div id="job-period-warning" class="period-warning" role="status" hidden>O período de 7 dias pode afetar o desempenho e aumentar o tempo da busca.</div></div>
         <div class="filter-group"><label for="job-state">Estado</label><div class="autocomplete"><input id="job-state" type="text" placeholder="Digite ou selecione um Estado" autocomplete="off" disabled><div id="job-state-options" class="autocomplete-menu" role="listbox" hidden></div></div></div>
         <div class="filter-group"><label for="job-municipality">Município <span style="font-weight:500;color:#64748b">(opcional)</span></label><div class="autocomplete"><input id="job-municipality" type="text" placeholder="Selecione primeiro um Estado" autocomplete="off" disabled><div id="job-municipality-options" class="autocomplete-menu" role="listbox" hidden></div></div></div>
-        <div id="job-location-hint" class="location-help">Informe o cargo para liberar o Estado. O Município é opcional; pesquisar apenas pelo Estado mostra a distribuição territorial das vagas.</div>
+        <div id="job-location-hint" class="location-help">Informe o cargo para liberar o Estado. O Município é opcional.</div>
         <button id="job-search">Buscar nesta plataforma</button>
         <button id="job-clear" class="clear-search" type="button">Limpar busca</button>
       </div>
@@ -959,7 +959,7 @@
         state.stateCode = ''; state.stateName = ''; state.municipality = ''; state.location = '';
         municipalityInput.value = ''; municipalityInput.disabled = true; municipalityInput.placeholder = 'Selecione primeiro um Estado';
         municipalityList.replaceChildren();
-        if (clearCity || changed) locationHint.textContent = 'Informe o cargo para liberar o Estado. O Município é opcional; pesquisar apenas pelo Estado mostra a distribuição territorial das vagas.';
+        if (clearCity || changed) locationHint.textContent = 'Informe o cargo para liberar o Estado. O Município é opcional.';
         updateTermAvailability(source);
         return;
       }
@@ -975,6 +975,7 @@
       const cachedCities = municipalityCache.get(stateCode);
       if (cachedCities) {
         renderAutocomplete('job-municipality', 'job-municipality-options', cachedCities, municipalityInput.value);
+        hideAutocomplete('job-municipality-options');
         locationHint.textContent = `${cachedCities.length} municípios disponíveis em ${state.stateName}. O Município é opcional; você também pode pesquisar apenas pelo Estado.`;
         return;
       }
@@ -988,6 +989,7 @@
         municipalityCache.set(stateCode, cities);
         if (token !== municipalityRequestToken || activeSource !== source || sourceStates[source].stateCode !== stateCode) return;
         renderAutocomplete('job-municipality', 'job-municipality-options', cities, municipalityInput.value);
+        hideAutocomplete('job-municipality-options');
         locationHint.textContent = `${cities.length} municípios disponíveis em ${state.stateName}. O Município é opcional; você também pode pesquisar apenas pelo Estado.`;
         if (state.municipality) municipalityInput.value = state.municipality;
       } catch (error) {
@@ -1417,7 +1419,7 @@
       state.searchToken += 1;
       state.loading = false;
       state.loadingStartedAt = 0;
-      state.message = 'Busca limpa. Informe um cargo e selecione um Estado para iniciar nova consulta.';
+      state.message = '';
       state.term = '';
       state.location = '';
       state.stateCode = ''; state.stateName = ''; state.municipality = '';
@@ -1438,12 +1440,12 @@
       document.getElementById('job-municipality').disabled = true;
       document.getElementById('job-municipality').placeholder = 'Selecione primeiro um Estado';
       document.getElementById('job-municipality-options').replaceChildren();
-      document.getElementById('job-location-hint').textContent = 'Informe o cargo para liberar o Estado. O Município é opcional; pesquisar apenas pelo Estado mostra a distribuição territorial das vagas.';
+      document.getElementById('job-location-hint').textContent = 'Informe o cargo para liberar o Estado. O Município é opcional.';
       document.getElementById('show-unconfirmed').checked = false;
       const searchButton = document.getElementById('job-search');
       searchButton.disabled = false;
       searchButton.textContent = 'Buscar nesta plataforma';
-      document.getElementById('job-status').textContent = state.message;
+      document.getElementById('job-status').textContent = '';
       document.getElementById('badge-total').textContent = 'Busca limpa';
       document.getElementById('table-count-label').textContent = '';
       document.querySelector('#vagas-table thead').innerHTML = '<tr><th>Cargo</th><th>Empresa</th><th>Localização</th><th>Data de publicação</th><th>Fonte</th><th>Validação</th><th>Anúncio</th></tr>';
