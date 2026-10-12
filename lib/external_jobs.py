@@ -14,8 +14,8 @@ from urllib.parse import urlencode, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 
-HOURS_OLD = 168
-RESULTS_WANTED = 100
+HOURS_OLD = 72
+RESULTS_WANTED = 300
 CACHE_TTL_SECONDS = 3600
 SUPPORTED_SITES = {"linkedin", "indeed", "glassdoor"}
 SITE_CONFIG = {
@@ -65,7 +65,7 @@ def normalize_state(value):
 
 def classify_date(value, now=None):
     """Return (status, UTC timestamp). Date-only values are confirmed only when
-    their entire UTC calendar day falls within the 144-hour window.
+    their UTC calendar date falls within the three-day window.
     """
     now = now or datetime.now(timezone.utc)
     if now.tzinfo is None:
@@ -103,7 +103,7 @@ def classify_date(value, now=None):
     if parsed > now:
         return "future", parsed.isoformat()
     if date_only:
-        cutoff_day = now.date() - timedelta(days=6)
+        cutoff_day = now.date() - timedelta(days=2)
         return ("recent", parsed.isoformat()) if parsed.date() >= cutoff_day else ("unconfirmed", parsed.isoformat())
     cutoff = now - timedelta(hours=HOURS_OLD)
     if parsed >= cutoff:
