@@ -766,7 +766,7 @@
         <button id="job-search">Buscar nesta plataforma</button>
         <button id="job-clear" class="clear-search" type="button">Limpar busca</button>
       </div>
-      <div id="source-notice" class="source-notice">Busca direcionada a vagas publicadas nas últimas 144 horas (6 dias), com até 300 resultados por plataforma. A quantidade efetivamente encontrada depende da disponibilidade e das limitações da fonte consultada. Os resultados não representam necessariamente todas as vagas existentes na plataforma.<br><br><strong>A consulta pode demorar alguns instantes, pois depende do tempo de resposta da plataforma. As buscas por estado podem levar mais tempo, mas permitem visualizar como as vagas do cargo se distribuem pelo território.</strong></div>
+      <div id="source-notice" class="source-notice">Busca direcionada a vagas publicadas nas últimas 144 horas (6 dias), com até 300 resultados por plataforma. Para agilizar a resposta inicial, os resultados chegam em lotes de até 50; clique em “Carregar mais vagas” para buscar os próximos lotes e ampliar a lista e o mapa. A quantidade efetivamente encontrada depende da disponibilidade e das limitações da fonte consultada. Os resultados não representam necessariamente todas as vagas existentes na plataforma.<br><br><strong>A consulta pode demorar alguns instantes, pois depende do tempo de resposta da plataforma. As buscas por estado podem levar mais tempo, mas permitem visualizar como as vagas do cargo se distribuem pelo território.</strong></div>
       <div id="job-status" class="job-status" aria-live="polite"></div>
     </div>
 
@@ -858,7 +858,7 @@
       RJ:'Rio de Janeiro', RN:'Rio Grande do Norte', RS:'Rio Grande do Sul', RO:'Rondônia',
       RR:'Roraima', SC:'Santa Catarina', SP:'São Paulo', SE:'Sergipe', TO:'Tocantins'
     };
-    const sourceStates = Object.fromEntries(['linkedin','indeed','glassdoor'].map(source => [source, {recent:[], unconfirmed:[], result:null, term:'', location:'', listPage:1, mapSelection:null, showUnconfirmed:false, searchToken:0, loading:false, message:''}]));
+    const sourceStates = Object.fromEntries(['linkedin','indeed','glassdoor'].map(source => [source, {recent:[], unconfirmed:[], result:null, term:'', location:'', listPage:1, mapSelection:null, showUnconfirmed:false, searchToken:0, loading:false, loadingMore:false, nextOffset:0, hasMore:false, message:''}]));
 
     function safeText(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function normalizeGeoName(value) { return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLocaleLowerCase('pt-BR'); }
@@ -1126,12 +1126,16 @@
       const result = state.result;
       if (state.loading) {
         document.getElementById('job-status').textContent = `Consultando ${source[0].toUpperCase()+source.slice(1)}...`;
+      } else if (state.loadingMore) {
+        document.getElementById('job-status').textContent = `Buscando o próximo lote no ${source[0].toUpperCase()+source.slice(1)}...`;
       } else if (result) {
-        const count = result.recent_count;
-        const status = result.status === 'sem_resultados' ? 'Consulta concluída sem resultados.' : `${result.collected_count} registro${result.collected_count===1?'':'s'} coletado${result.collected_count===1?'':'s'}; ${count} vaga${count===1?'':'s'} recente${count===1?'':'s'} encontrada${count===1?'':'s'}${count===300?' — limite de resultados atingido.':'.'}`;
-        const unconfirmed = result.unconfirmed_count ? ` ${result.unconfirmed_count} registro${result.unconfirmed_count===1?'':'s'} com data de publicação não confirmada.` : '';
+        const count = state.recent.length;
+        const collected = result.collected_count;
+        const status = result.status === 'sem_resultados' && !state.hasMore ? 'Consulta concluída sem resultados.' : `${collected} registro${collected===1?'':'s'} coletado${collected===1?'':'s'}; ${count} vaga${count===1?'':'s'} recente${count===1?'':'s'} carregada${count===1?'':'s'}${!state.hasMore && collected>=result.results_wanted?' — limite de resultados atingido.':'.'}`;
+        const unconfirmed = state.unconfirmed.length ? ` ${state.unconfirmed.length} registro${state.unconfirmed.length===1?'':'s'} com data de publicação não confirmada.` : '';
         const unlocated = result.map_unlocated_count ? ` ${result.map_unlocated_count} sem município geolocalizado; permanecem na lista.` : '';
-        document.getElementById('job-status').textContent = `${status}${unconfirmed}${unlocated}${result.cached?' (resultado em cache)':''}`;
+        const nextBatch = state.hasMore ? ' Use “Carregar mais vagas” para continuar a busca, atualizar a lista e ampliar os pontos no mapa.' : '';
+        document.getElementById('job-status').textContent = `${status}${unconfirmed}${unlocated}${nextBatch}${state.message?` ${state.message}`:''}${result.cached?' (lote em cache)':''}`;
       } else document.getElementById('job-status').textContent = state.message;
       const mapJobs = locationScoped.filter(j => j.latitude != null && j.longitude != null);
       if (markersCluster) markersCluster.clearLayers();
@@ -1189,11 +1193,73 @@
         tr.innerHTML = `<td>${safeText(job.title)}</td><td>${safeText(job.company)}</td><td>${safeText(job.location)}</td><td>${safeText(formatPostedDate(job.date_posted))}</td><td>${safeText(job.source)}</td><td>${safeText(dateLabel)}</td><td>${links || 'Link indisponível'}</td>`;
         tbody.appendChild(tr);
       });
-      if (selected.length > state.listPage*50) {
+      if (state.hasMore || selected.length > state.listPage*50) {
         const more = document.createElement('tr');
-        more.innerHTML = '<td colspan="7" style="text-align:center"><button type="button" class="btn-apply">Carregar mais vagas</button></td>';
-        more.querySelector('button').addEventListener('click', () => { state.listPage += 1; renderExternal(source); });
+        more.innerHTML = `<td colspan="7" style="text-align:center"><button type="button" class="btn-apply" ${state.loadingMore?'disabled':''}>${state.loadingMore?'Consultando plataforma...':state.hasMore?'Carregar mais vagas':'Mostrar mais vagas'}</button></td>`;
+        more.querySelector('button').addEventListener('click', () => {
+          if (state.hasMore) loadMoreExternal(source);
+          else { state.listPage += 1; renderExternal(source); }
+        });
         tbody.appendChild(more);
+      }
+    }
+
+    async function fetchExternalBatch(source, term, location, offset) {
+      const params = new URLSearchParams({site:source, search_term:term, location, offset:String(offset)});
+      const response = await fetch(`/api/busca?${params}`);
+      const responseText = await response.text();
+      let body;
+      try { body = responseText ? JSON.parse(responseText) : {}; }
+      catch {
+        const detail = responseText.replace(/\s+/g,' ').slice(0,180);
+        if (response.status === 504) throw new Error(`A consulta excedeu o limite de tempo do servidor (HTTP 504). Tente novamente ou pesquise por município. ${detail}`);
+        throw new Error(`O servidor retornou uma resposta inválida (HTTP ${response.status}). ${detail}`);
+      }
+      if (!response.ok) throw new Error(body.error || `Falha na consulta (HTTP ${response.status}).`);
+      return body;
+    }
+
+    function appendUniqueJobs(target, incoming) {
+      const identity = job => job.job_url || `${job.title}|${job.company}|${job.location}|${job.date_posted}`;
+      const known = new Set(target.map(identity));
+      incoming.forEach(job => {
+        const key = identity(job);
+        if (!known.has(key)) { target.push(job); known.add(key); }
+      });
+    }
+
+    async function loadMoreExternal(source) {
+      const state = sourceStates[source];
+      if (!state.hasMore || state.loadingMore) return;
+      const requestToken = state.searchToken;
+      state.loadingMore = true;
+      state.message = '';
+      if (activeSource === source) renderExternal(source);
+      try {
+        const body = await fetchExternalBatch(source, state.term, state.location, state.nextOffset);
+        if (state.searchToken !== requestToken) return;
+        appendUniqueJobs(state.recent, body.recent_jobs || []);
+        appendUniqueJobs(state.unconfirmed, body.unconfirmed_jobs || []);
+        state.result = {
+          ...body,
+          collected_count: (state.result?.collected_count || 0) + body.collected_count,
+          recent_count: state.recent.length,
+          unconfirmed_count: state.unconfirmed.length,
+          map_unlocated_count: (state.result?.map_unlocated_count || 0) + body.map_unlocated_count,
+          status: state.recent.length || state.unconfirmed.length ? 'concluida' : 'sem_resultados',
+        };
+        state.nextOffset = body.next_offset;
+        state.hasMore = Boolean(body.has_more);
+        state.listPage += 1;
+        state.message = '';
+      } catch (error) {
+        if (state.searchToken !== requestToken) return;
+        state.message = `Não foi possível carregar o próximo lote. ${error.message}`;
+      } finally {
+        if (state.searchToken === requestToken) {
+          state.loadingMore = false;
+          if (activeSource === source) renderExternal(source);
+        }
       }
     }
 
@@ -1205,27 +1271,17 @@
       if (!term) { state.message = 'Informe um cargo ou palavra-chave.'; document.getElementById('job-status').textContent = state.message; return; }
       if (!location) { state.message = 'Informe um estado ou município para a localização.'; document.getElementById('job-status').textContent = state.message; return; }
       state.term = term; state.location = location;
-      state.recent = []; state.unconfirmed = []; state.result = null; state.listPage = 1; state.mapSelection = null;
+      state.recent = []; state.unconfirmed = []; state.result = null; state.listPage = 1; state.mapSelection = null; state.nextOffset = 0; state.hasMore = false; state.loadingMore = false; state.message = '';
       const requestToken = ++state.searchToken;
       state.loading = true;
       state.message = `Consultando ${source[0].toUpperCase()+source.slice(1)}...`;
       updateExternalSearchControls(source);
       renderExternal(source);
       try {
-        const params = new URLSearchParams({site:source, search_term:term, location});
-        const response = await fetch(`/api/busca?${params}`);
-        const responseText = await response.text();
-        let body;
-        try { body = responseText ? JSON.parse(responseText) : {}; }
-        catch {
-          const detail = responseText.replace(/\s+/g,' ').slice(0,180);
-          if (response.status === 504) throw new Error(`A consulta excedeu o limite de tempo do servidor (HTTP 504). Tente novamente ou pesquise por município. ${detail}`);
-          throw new Error(`O servidor retornou uma resposta inválida (HTTP ${response.status}). ${detail}`);
-        }
+        const body = await fetchExternalBatch(source, term, location, 0);
         if (state.searchToken !== requestToken) return;
-        if (!response.ok) throw new Error(body.error || `Falha na consulta (HTTP ${response.status}).`);
         state.recent = body.recent_jobs || []; state.unconfirmed = body.unconfirmed_jobs || []; state.result = body;
-        state.mapSelection = null; state.listPage = 1;
+        state.mapSelection = null; state.listPage = 1; state.nextOffset = body.next_offset; state.hasMore = Boolean(body.has_more);
       } catch (error) {
         if (state.searchToken !== requestToken) return;
         state.message = `Não foi possível consultar esta plataforma no momento. ${error.message}`;
@@ -1244,6 +1300,7 @@
       const state = sourceStates[source];
       state.searchToken += 1;
       state.loading = false;
+      state.loadingMore = false;
       state.message = 'Busca limpa. Informe um cargo e uma localização para iniciar nova consulta.';
       state.term = '';
       state.location = '';
@@ -1252,6 +1309,8 @@
       state.result = null;
       state.listPage = 1;
       state.mapSelection = null;
+      state.nextOffset = 0;
+      state.hasMore = false;
       state.showUnconfirmed = false;
       document.getElementById('job-term').value = '';
       document.getElementById('job-location').value = '';

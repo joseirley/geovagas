@@ -18,6 +18,7 @@ class handler(BaseHTTPRequestHandler):
                 query.get("search_term", [""])[0],
                 query.get("location", [""])[0],
                 query.get("fetch_description", ["false"])[0].lower() == "true",
+                offset=query.get("offset", ["0"])[0],
             )
             self._respond(200, result)
         except ValueError as exc:
