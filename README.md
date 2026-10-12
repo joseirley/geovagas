@@ -43,7 +43,7 @@ O projeto utiliza como fonte inicial os dados abertos oficiais da **Prefeitura d
 
 ### Fontes externas
 
-As abas LinkedIn, Indeed e Glassdoor consultam uma fonte por vez pelo endpoint `GET /api/busca`. O JobSpy está fixado em `requirements.txt` (Python 3.10+). Cada busca solicita até 300 resultados e `hours_old=144`; Indeed e Glassdoor recebem `country_indeed="Brazil"`. A descrição completa fica desativada para evitar requisições extras por anúncio.
+As abas LinkedIn, Indeed e Glassdoor consultam uma fonte por vez pelo endpoint `GET /api/busca`. O JobSpy está fixado em `requirements.txt` (Python 3.10+). Cada busca solicita até 100 resultados e `hours_old=144`; Indeed e Glassdoor recebem `country_indeed="Brazil"`. A descrição completa fica desativada para evitar requisições extras por anúncio.
 
 O backend valida `date_posted` em UTC, exclui datas comprovadamente antigas e futuras, e mantém datas ausentes ou impossíveis de validar em uma lista separada. Datas sem horário só são marcadas recentes quando o dia inteiro cabe dentro da janela de 144 horas. Os resultados de cada parâmetro de busca ficam em cache de processo por até 60 minutos. A função de busca da Vercel pode executar por até 300 segundos; bloqueios, lentidão ou indisponibilidade da plataforma aparecem como falha da fonte consultada.
 

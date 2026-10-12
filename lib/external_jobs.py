@@ -15,7 +15,7 @@ from urllib.request import Request, urlopen
 
 
 HOURS_OLD = 144
-RESULTS_WANTED = 300
+RESULTS_WANTED = 100
 CACHE_TTL_SECONDS = 3600
 SUPPORTED_SITES = {"linkedin", "indeed", "glassdoor"}
 SITE_CONFIG = {

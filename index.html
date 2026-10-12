@@ -781,7 +781,7 @@
         <button id="job-search">Buscar nesta plataforma</button>
         <button id="job-clear" class="clear-search" type="button">Limpar busca</button>
       </div>
-      <div id="source-notice" class="source-notice">Busca direcionada a vagas publicadas nas últimas 144 horas (6 dias), com até 300 resultados por plataforma. A quantidade efetivamente encontrada depende da disponibilidade e das limitações da fonte consultada. Os resultados não representam necessariamente todas as vagas existentes na plataforma.<br><br><strong>A consulta pode demorar alguns instantes, pois depende do tempo de resposta da plataforma. As buscas por estado podem levar mais tempo, mas permitem visualizar como as vagas do cargo se distribuem pelo território.</strong></div>
+      <div id="source-notice" class="source-notice">Busca direcionada a vagas publicadas nas últimas 144 horas (6 dias), com até 100 resultados por plataforma. A quantidade efetivamente encontrada depende da disponibilidade e das limitações da fonte consultada. Os resultados não representam necessariamente todas as vagas existentes na plataforma.<br><br><strong>A consulta pode demorar alguns instantes, pois depende do tempo de resposta da plataforma. As buscas por estado podem levar mais tempo, mas permitem visualizar como as vagas do cargo se distribuem pelo território.</strong></div>
       <div id="job-status" class="job-status" aria-live="polite"></div>
     </div>
 
@@ -1152,7 +1152,7 @@
         renderSearchProgress(source, state);
       } else if (result) {
         const count = result.recent_count;
-        const status = result.status === 'sem_resultados' ? 'Consulta concluída sem resultados.' : `${result.collected_count} registro${result.collected_count===1?'':'s'} coletado${result.collected_count===1?'':'s'}; ${count} vaga${count===1?'':'s'} recente${count===1?'':'s'} encontrada${count===1?'':'s'}${count===300?' — limite de resultados atingido.':'.'}`;
+        const status = result.status === 'sem_resultados' ? 'Consulta concluída sem resultados.' : `${result.collected_count} registro${result.collected_count===1?'':'s'} coletado${result.collected_count===1?'':'s'}; ${count} vaga${count===1?'':'s'} recente${count===1?'':'s'} encontrada${count===1?'':'s'}${result.collected_count>=result.results_wanted?' — limite de resultados atingido.':'.'}`;
         const unconfirmed = result.unconfirmed_count ? ` ${result.unconfirmed_count} registro${result.unconfirmed_count===1?'':'s'} com data de publicação não confirmada.` : '';
         const unlocated = result.map_unlocated_count ? ` ${result.map_unlocated_count} sem município geolocalizado; permanecem na lista.` : '';
         document.getElementById('job-status').textContent = `${status}${unconfirmed}${unlocated}${result.cached?' (resultado em cache)':''}`;
