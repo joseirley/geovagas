@@ -1168,7 +1168,8 @@
 
       // Atualizar contadores
       document.getElementById('badge-total').textContent = `${filteredVagas.length} de ${allVagas.length} vagas encontradas`;
-      document.getElementById('table-count-label').textContent = `Mostrando ${filteredVagas.length} registros`;
+      const mappedVagas = filteredVagas.filter(v => v.lat != null && v.lon != null).length;
+      document.getElementById('table-count-label').textContent = `Exibidos na lista: ${filteredVagas.length} • Exibidos no mapa: ${mappedVagas}`;
 
       // Atualizar Mapa e Tabela
       atualizarMapa(filteredVagas);
@@ -1277,11 +1278,8 @@
       } else if (result) {
         document.getElementById('job-progress').textContent = '';
         const count = locationScoped.length;
-        const status = result.status === 'sem_resultados' ? 'Consulta concluída sem resultados.' : `${result.collected_count} registro${result.collected_count===1?'':'s'} coletado${result.collected_count===1?'':'s'}; ${count} vaga${count===1?'':'s'} exibida${count===1?'':'s'} para o filtro atual${result.collected_count>=result.results_wanted?' — limite de resultados atingido.':'.'}`;
-        const unconfirmed = result.unconfirmed_count ? ` ${result.unconfirmed_count} registro${result.unconfirmed_count===1?'':'s'} com data de publicação não confirmada.` : '';
-        const missingMunicipalities = result.unlocated_municipality_count ?? result.map_unlocated_count ?? 0;
-        const unlocated = missingMunicipalities ? ` ${missingMunicipalities} município${missingMunicipalities===1?'':'s'} sem geolocalização.` : ' Todos os municípios localizados.';
-        document.getElementById('job-status').textContent = `${status}${unconfirmed}${unlocated}${result.cached?' (resultado em cache)':''}`;
+        const status = result.status === 'sem_resultados' ? 'Consulta concluída sem resultados.' : 'Consulta concluída.';
+        document.getElementById('job-status').textContent = `${status}${result.cached?' (resultado em cache)':''}`;
       } else {
         document.getElementById('job-progress').textContent = '';
         document.getElementById('job-status').textContent = state.message;
@@ -1332,10 +1330,8 @@
       exportRows = selected;
       document.getElementById('export-xlsx').disabled = exportRows.length === 0;
       document.getElementById('badge-total').textContent = `${selected.length} vagas nesta seleção`;
-      const missingMunicipalities = new Set(selected.filter(j=>j.latitude == null || j.longitude == null).map(j=>`${j.state}|${normalizeGeoName(j.city)}`).filter(key=>key !== '|')).size;
-      const found = state.result?.collected_count ?? 0;
       const mapped = selected.filter(j=>j.latitude != null && j.longitude != null).length;
-      document.getElementById('table-count-label').textContent = `Encontrados na consulta: ${found} • Exibidos na lista: ${selected.length} • Registros localizados no mapa: ${mapped} • ${missingMunicipalities} município${missingMunicipalities===1?'':'s'} sem geolocalização`;
+      document.getElementById('table-count-label').textContent = `Exibidos na lista: ${selected.length} • Exibidos no mapa: ${mapped}`;
 
       const tbody = document.getElementById('vagas-tbody');
       document.querySelector('#vagas-table thead').innerHTML = '<tr><th>Cargo</th><th>Empresa</th><th>Localização</th><th>Data de publicação</th><th>Fonte</th><th>Validação</th><th>Anúncio</th></tr>';
