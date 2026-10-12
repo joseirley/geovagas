@@ -1214,9 +1214,16 @@
       try {
         const params = new URLSearchParams({site:source, search_term:term, location});
         const response = await fetch(`/api/busca?${params}`);
-        const body = await response.json();
+        const responseText = await response.text();
+        let body;
+        try { body = responseText ? JSON.parse(responseText) : {}; }
+        catch {
+          const detail = responseText.replace(/\s+/g,' ').slice(0,180);
+          if (response.status === 504) throw new Error(`A consulta excedeu o limite de tempo do servidor (HTTP 504). Tente novamente ou pesquise por município. ${detail}`);
+          throw new Error(`O servidor retornou uma resposta inválida (HTTP ${response.status}). ${detail}`);
+        }
         if (state.searchToken !== requestToken) return;
-        if (!response.ok) throw new Error(body.error || 'Falha na consulta.');
+        if (!response.ok) throw new Error(body.error || `Falha na consulta (HTTP ${response.status}).`);
         state.recent = body.recent_jobs || []; state.unconfirmed = body.unconfirmed_jobs || []; state.result = body;
         state.mapSelection = null; state.listPage = 1;
       } catch (error) {

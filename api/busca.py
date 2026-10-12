@@ -1,6 +1,7 @@
 """Independent on-demand search endpoint for LinkedIn, Indeed and Glassdoor."""
 
 import json
+import logging
 from urllib.parse import parse_qs, urlsplit
 
 from http.server import BaseHTTPRequestHandler
@@ -22,6 +23,7 @@ class handler(BaseHTTPRequestHandler):
         except ValueError as exc:
             self._respond(400, {"error": str(exc)})
         except Exception:
+            logging.exception("Falha inesperada na consulta de vagas")
             self._respond(502, {
                 "error": "Não foi possível consultar esta plataforma no momento.",
             })
