@@ -21,6 +21,9 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
+  <!-- Exportação de planilhas XLSX -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
   <style>
     :root {
       --primary: #1e40af;
@@ -306,7 +309,7 @@
     .table-section {
       height: auto;
       flex: 2 1 0;
-      min-height: 0;
+      min-height: 220px;
       background-color: #ffffff;
       border-top: 2px solid var(--border-color);
       display: flex;
@@ -322,6 +325,21 @@
       align-items: center;
       justify-content: space-between;
     }
+
+    .table-header-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .btn-export { border:1px solid #15803d; background:#16a34a; color:#fff; border-radius:6px; padding:7px 11px; font-size:.82rem; font-weight:700; cursor:pointer; }
+    .btn-export:hover:not(:disabled) { background:#15803d; }
+    .btn-export:disabled { opacity:.5; cursor:not-allowed; }
+    .table-container { scrollbar-color:#94a3b8 #f1f5f9; }
+    table.vagas-table tbody tr:nth-child(even) { background:#f8fafc; }
+    table.vagas-table tbody tr:hover { background:#eaf2ff; }
+    table.vagas-table td { color:#0f172a; font-size:.88rem; }
+    .autocomplete { position:relative; width:100%; }
+    .autocomplete-menu { position:absolute; z-index:1500; top:calc(100% + 3px); left:0; right:0; max-height:240px; overflow:auto; padding:4px; background:#fff; border:1px solid #cbd5e1; border-radius:7px; box-shadow:0 8px 20px rgba(15,23,42,.14); }
+    .autocomplete-menu[hidden] { display:none; }
+    .autocomplete-option { display:block; width:100%; padding:8px 10px; border:0; border-radius:4px; background:#fff; color:#1e293b; text-align:left; font:500 .86rem 'Inter',sans-serif; cursor:pointer; }
+    .autocomplete-option:hover, .autocomplete-option:focus { background:#eff6ff; color:#1e40af; outline:none; }
+    .autocomplete-empty { padding:9px 10px; color:#64748b; font-size:.82rem; }
 
     .table-header-bar h3 {
       font-size: 0.95rem;
@@ -619,7 +637,7 @@
         flex: none;
         width: 100%;
         height: auto;
-        min-height: 360px;
+        min-height: 420px;
         overflow: visible;
       }
 
@@ -641,9 +659,9 @@
 
       .table-container {
         flex: none;
-        max-height: none;
+        max-height: min(65vh, 620px);
         overflow-x: auto;
-        overflow-y: hidden;
+        overflow-y: auto;
         -webkit-overflow-scrolling: touch;
       }
 
@@ -764,8 +782,8 @@
       </div>
       <div id="external-controls" class="external-controls">
         <div class="filter-group"><label for="job-term">Cargo / Área de trabalho</label><input id="job-term" type="text" maxlength="160" placeholder="Digite o cargo ou palavra-chave"></div>
-        <div class="filter-group"><label for="job-state">Estado</label><input id="job-state" type="text" list="job-state-options" placeholder="Digite ou selecione um Estado" autocomplete="off" disabled><datalist id="job-state-options"></datalist></div>
-        <div class="filter-group"><label for="job-municipality">Município <span style="font-weight:500;color:#64748b">(opcional)</span></label><input id="job-municipality" type="text" list="job-municipality-options" placeholder="Selecione primeiro um Estado" autocomplete="off" disabled><datalist id="job-municipality-options"></datalist></div>
+        <div class="filter-group"><label for="job-state">Estado</label><div class="autocomplete"><input id="job-state" type="text" placeholder="Digite ou selecione um Estado" autocomplete="off" disabled><div id="job-state-options" class="autocomplete-menu" role="listbox" hidden></div></div></div>
+        <div class="filter-group"><label for="job-municipality">Município <span style="font-weight:500;color:#64748b">(opcional)</span></label><div class="autocomplete"><input id="job-municipality" type="text" placeholder="Selecione primeiro um Estado" autocomplete="off" disabled><div id="job-municipality-options" class="autocomplete-menu" role="listbox" hidden></div></div></div>
         <div id="job-location-hint" class="location-help">Informe o cargo para liberar o Estado. O Município é opcional; pesquisar apenas pelo Estado mostra a distribuição territorial das vagas.</div>
         <button id="job-search">Buscar nesta plataforma</button>
         <button id="job-clear" class="clear-search" type="button">Limpar busca</button>
@@ -805,11 +823,9 @@
     <section class="table-section">
       <div class="table-header-bar">
         <h3>📋 Lista de Oportunidades</h3>
-        <div style="display: flex; align-items: center; gap: 16px;">
+        <div class="table-header-actions">
           <span id="table-count-label" style="font-size: 0.85rem; color: #64748b; font-weight: 500;"></span>
-          <span style="font-size: 0.8rem; color: #475569; border-left: 1px solid #cbd5e1; padding-left: 14px;">
-            Desenvolvido por: <strong>José Irley</strong> • Contato: <a href="mailto:jose.geografo@gmail.com" style="color: #1e40af; text-decoration: none; font-weight: 600;">jose.geografo@gmail.com</a>
-          </span>
+          <button id="export-xlsx" class="btn-export" type="button" disabled>Exportar lista .xlsx</button>
         </div>
       </div>
       <div class="table-container">
@@ -857,6 +873,7 @@
     const sourceStates = Object.fromEntries(['linkedin','indeed','glassdoor'].map(source => [source, {recent:[], unconfirmed:[], result:null, term:'', location:'', stateCode:'', stateName:'', municipality:'', listPage:1, mapSelection:null, showUnconfirmed:false, searchToken:0, loading:false, loadingStartedAt:0, message:''}]));
     const municipalityCache = new Map();
     let municipalityRequestToken = 0;
+    let exportRows = [];
 
     function safeText(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function sourceLabel(source) { return ({linkedin:'LinkedIn',indeed:'Indeed',glassdoor:'Glassdoor'})[source] || source; }
@@ -886,11 +903,23 @@
       return Object.keys(BRAZIL_STATES).find(code => normalizeGeoName(code) === normalized || normalizeGeoName(BRAZIL_STATES[code]) === normalized) || '';
     }
     function populateStateOptions() {
-      const list = document.getElementById('job-state-options');
-      list.replaceChildren(...Object.keys(BRAZIL_STATES)
-        .sort((a, b) => BRAZIL_STATES[a].localeCompare(BRAZIL_STATES[b], 'pt-BR'))
-        .map(code => { const option = document.createElement('option'); option.value = BRAZIL_STATES[code]; option.label = code; return option; }));
+      stateOptionValues = Object.keys(BRAZIL_STATES).sort((a, b) => BRAZIL_STATES[a].localeCompare(BRAZIL_STATES[b], 'pt-BR')).map(code => BRAZIL_STATES[code]);
     }
+    let stateOptionValues = [];
+    function renderAutocomplete(inputId, menuId, items, query = '') {
+      const menu = document.getElementById(menuId);
+      const normalizedQuery = normalizeGeoName(query);
+      const matches = items.filter(item => !normalizedQuery || normalizeGeoName(item).includes(normalizedQuery)).slice(0, 80);
+      menu.replaceChildren();
+      if (!matches.length) { const empty = document.createElement('div'); empty.className = 'autocomplete-empty'; empty.textContent = 'Nenhuma opção encontrada'; menu.appendChild(empty); }
+      matches.forEach(value => {
+        const option = document.createElement('button'); option.type = 'button'; option.className = 'autocomplete-option'; option.role = 'option'; option.textContent = value;
+        option.addEventListener('pointerdown', event => { event.preventDefault(); document.getElementById(inputId).value = value; menu.hidden = true; document.getElementById(inputId).dispatchEvent(new Event('change', {bubbles:true})); });
+        menu.appendChild(option);
+      });
+      menu.hidden = false;
+    }
+    function hideAutocomplete(menuId) { document.getElementById(menuId).hidden = true; }
     function updateTermAvailability(source) {
       if (activeSource !== source) return;
       const termEnabled = Boolean(document.getElementById('job-term').value.trim());
@@ -924,7 +953,7 @@
       const token = ++municipalityRequestToken;
       const cachedCities = municipalityCache.get(stateCode);
       if (cachedCities) {
-        municipalityList.replaceChildren(...cachedCities.map(city => { const option = document.createElement('option'); option.value = city; return option; }));
+        renderAutocomplete('job-municipality', 'job-municipality-options', cachedCities, municipalityInput.value);
         locationHint.textContent = `${cachedCities.length} municípios disponíveis em ${state.stateName}. O Município é opcional; você também pode pesquisar apenas pelo Estado.`;
         return;
       }
@@ -937,7 +966,7 @@
         const cities = records.map(record => record.nome).filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'));
         municipalityCache.set(stateCode, cities);
         if (token !== municipalityRequestToken || activeSource !== source || sourceStates[source].stateCode !== stateCode) return;
-        municipalityList.replaceChildren(...cities.map(city => { const option = document.createElement('option'); option.value = city; return option; }));
+        renderAutocomplete('job-municipality', 'job-municipality-options', cities, municipalityInput.value);
         locationHint.textContent = `${cities.length} municípios disponíveis em ${state.stateName}. O Município é opcional; você também pode pesquisar apenas pelo Estado.`;
         if (state.municipality) municipalityInput.value = state.municipality;
       } catch (error) {
@@ -1106,6 +1135,8 @@
         }
         return true;
       });
+      exportRows = filteredVagas;
+      document.getElementById('export-xlsx').disabled = exportRows.length === 0;
 
       // Atualizar contadores
       document.getElementById('badge-total').textContent = `${filteredVagas.length} de ${allVagas.length} vagas encontradas`;
@@ -1265,6 +1296,8 @@
     function renderExternalTable(source, selected) {
       const state = sourceStates[source];
       selected = sortExternalJobsOldestFirst(selected);
+      exportRows = selected;
+      document.getElementById('export-xlsx').disabled = exportRows.length === 0;
       document.getElementById('badge-total').textContent = `${selected.length} vagas nesta seleção`;
       document.getElementById('table-count-label').textContent = `${selected.length} registros disponíveis; exibindo ${Math.min(selected.length,state.listPage*50)}; ${selected.filter(j=>j.latitude != null && j.longitude != null).length} localizados no mapa`;
 
@@ -1425,10 +1458,40 @@
       if (activeSource !== 'gobh') sourceStates[activeSource].term = e.target.value;
       updateTermAvailability(activeSource);
     });
-    document.getElementById('job-state').addEventListener('input', () => updateMunicipalityOptions(activeSource));
-    document.getElementById('job-state').addEventListener('keydown', e => { if (e.key === 'Enter') searchExternal(); });
-    document.getElementById('job-municipality').addEventListener('input', e => { if (activeSource !== 'gobh') sourceStates[activeSource].municipality = e.target.value; });
-    document.getElementById('job-municipality').addEventListener('keydown', e => { if (e.key === 'Enter') searchExternal(); });
+    const stateInput = document.getElementById('job-state');
+    const municipalityInput = document.getElementById('job-municipality');
+    stateInput.addEventListener('focus', () => renderAutocomplete('job-state', 'job-state-options', stateOptionValues, stateInput.value));
+    stateInput.addEventListener('input', () => {
+      renderAutocomplete('job-state', 'job-state-options', stateOptionValues, stateInput.value);
+      const selectedCode = resolveStateCode(stateInput.value);
+      if (selectedCode && normalizeGeoName(stateInput.value) === normalizeGeoName(BRAZIL_STATES[selectedCode])) updateMunicipalityOptions(activeSource);
+      else {
+        const state = sourceStates[activeSource]; state.stateCode = ''; state.stateName = ''; state.municipality = ''; state.location = '';
+        municipalityInput.value = ''; municipalityInput.disabled = true; municipalityInput.placeholder = 'Selecione primeiro um Estado';
+        document.getElementById('job-municipality-options').hidden = true;
+      }
+    });
+    stateInput.addEventListener('change', () => updateMunicipalityOptions(activeSource));
+    stateInput.addEventListener('blur', () => setTimeout(() => hideAutocomplete('job-state-options'), 120));
+    stateInput.addEventListener('keydown', e => { if (e.key === 'Enter') searchExternal(); });
+    municipalityInput.addEventListener('focus', () => { const cities = municipalityCache.get(sourceStates[activeSource].stateCode) || []; renderAutocomplete('job-municipality', 'job-municipality-options', cities, municipalityInput.value); });
+    municipalityInput.addEventListener('input', e => { if (activeSource !== 'gobh') { sourceStates[activeSource].municipality = e.target.value; renderAutocomplete('job-municipality', 'job-municipality-options', municipalityCache.get(sourceStates[activeSource].stateCode) || [], e.target.value); } });
+    municipalityInput.addEventListener('blur', () => setTimeout(() => hideAutocomplete('job-municipality-options'), 120));
+    municipalityInput.addEventListener('keydown', e => { if (e.key === 'Enter') searchExternal(); });
+    document.getElementById('export-xlsx').addEventListener('click', () => {
+      if (!exportRows.length) return;
+      if (!window.XLSX) { document.getElementById('job-status').textContent = 'Não foi possível carregar o recurso de exportação. Atualize a página e tente novamente.'; return; }
+      const headers = activeSource === 'gobh'
+        ? ['Cargo / Descrição','Empregador','Local de Trabalho','Contratação','Escolaridade','Horário','Carga Horária','Salário','Link da vaga']
+        : ['Cargo','Empresa','Localização','Data de publicação','Fonte','Validação','Anúncio','Link direto'];
+      const rows = exportRows.map(job => activeSource === 'gobh'
+        ? [job.titulo,job.empresa,job.local_trabalho,job.contratacao,job.escolaridade,job.horario,job.carga_horaria,job.salario,job.link_gobh]
+        : [job.title,job.company,job.location,formatPostedDate(job.date_posted),job.source,job.date_status === 'recent' ? 'Recente confirmada' : 'Data não confirmada',job.job_url,job.job_url_direct]);
+      const sheet = XLSX.utils.aoa_to_sheet([headers,...rows]);
+      sheet['!cols'] = headers.map((_, index) => ({wch:Math.min(48,Math.max(14,...rows.map(row => String(row[index] ?? '').length)))}));
+      const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, sheet, 'Vagas');
+      XLSX.writeFile(workbook, `geovagas-${activeSource}-${new Date().toISOString().slice(0,10)}.xlsx`);
+    });
     document.getElementById('show-unconfirmed').addEventListener('change', e => { sourceStates[activeSource].showUnconfirmed = e.target.checked; sourceStates[activeSource].listPage = 1; renderExternal(activeSource); });
 
     document.getElementById('btn-reset').addEventListener('click', () => {
@@ -1478,7 +1541,7 @@
       let mapResizeFrame = 0;
       const maxMapHeight = () => mobileLayout.matches
         ? Math.max(280, Math.round(window.innerHeight * .78))
-        : Math.max(280, document.querySelector('.main-content').clientHeight - document.querySelector('.topbar').offsetHeight - document.querySelector('.source-tabs').offsetHeight - resizer.offsetHeight - 180);
+        : Math.max(250, document.querySelector('.main-content').clientHeight - document.querySelector('.topbar').offsetHeight - document.querySelector('.source-tabs').offsetHeight - resizer.offsetHeight - 270);
       const setMapHeight = height => {
         const minHeight = mobileLayout.matches ? 260 : 250;
         const boundedHeight = Math.max(minHeight, Math.min(maxMapHeight(), height));
