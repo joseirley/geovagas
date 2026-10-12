@@ -211,8 +211,8 @@
 
     /* TOP BAR */
     header.topbar {
-      height: 56px;
-      min-height: 56px;
+      height: auto;
+      min-height: 68px;
       background-color: #ffffff;
       border-bottom: 1px solid var(--border-color);
       display: flex;
@@ -246,8 +246,10 @@
 
     .topbar-disclaimer {
       display: flex;
-      align-items: center;
-      gap: 6px;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+      max-width: 52%;
       background-color: #fffbeb;
       border: 1px solid #fef3c7;
       color: #92400e;
@@ -255,6 +257,12 @@
       border-radius: 6px;
       font-size: 0.8rem;
       font-weight: 500;
+      text-align: right;
+      line-height: 1.35;
+    }
+
+    .topbar-source-label {
+      font-weight: 700;
     }
 
     .topbar-disclaimer strong {
@@ -605,8 +613,9 @@
       }
 
       .topbar-disclaimer {
-        align-items: flex-start;
+        align-items: flex-end;
         width: 100%;
+        max-width: none;
         padding: 7px 9px;
         font-size: 0.72rem;
         line-height: 1.4;
@@ -777,8 +786,6 @@
     </div>
 
     <div class="sidebar-footer">
-      <div id="source-footer">Dados oficiais: PBH (GO BH)</div>
-      <div style="margin-top: 4px; color: #b45309; font-weight: 600;">Site exclusivo para visualização geoespacial e informações sobre as vagas. Candidaturas no respectivo portal.</div>
       <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 0.72rem; color: #334155;">
         Desenvolvido por: <strong>José Irley</strong><br>
         Contato: <a href="mailto:jose.geografo@gmail.com" style="color: #1e40af; text-decoration: none; font-weight: 600;">jose.geografo@gmail.com</a>
@@ -795,8 +802,8 @@
         <span id="badge-total" class="badge-count">Carregando vagas...</span>
       </div>
       <div class="topbar-disclaimer">
-        <span>⚠️</span>
-        <span>Plataforma exclusivamente para <strong>visualização</strong>. A candidatura deve ser realizada diretamente no site do <strong>GOBH</strong>.</span>
+        <span id="topbar-source-label" class="topbar-source-label">Dados oficiais: PBH (GO BH)</span>
+        <span id="topbar-visual-notice">⚠️ Site exclusivo para visualização geoespacial e informações sobre as vagas. Candidaturas no respectivo portal.</span>
       </div>
     </header>
 
@@ -908,8 +915,7 @@
       document.querySelectorAll('.source-tab').forEach(tab => tab.setAttribute('aria-selected', String(tab.dataset.source === source)));
       document.querySelector('.sidebar-content').querySelectorAll('.filter-group:not(#external-controls .filter-group), #btn-reset').forEach(el => el.style.display = external ? 'none' : '');
       document.getElementById('filter-title').textContent = external ? `Filtros de ${source[0].toUpperCase()+source.slice(1)}` : 'Filtros de Vagas';
-      document.getElementById('source-footer').textContent = external ? `Fonte consultada: ${source[0].toUpperCase()+source.slice(1)}` : 'Dados oficiais: PBH (GO BH)';
-      document.querySelector('.topbar-disclaimer span:last-child').textContent = external ? 'Os links de candidatura levam ao anúncio original da plataforma consultada.' : 'Plataforma exclusivamente para visualização. A candidatura deve ser realizada diretamente no site do GOBH.';
+      document.getElementById('topbar-source-label').textContent = external ? `Fonte consultada: ${sourceLabel(source)}` : 'Dados oficiais: PBH (GO BH)';
       document.getElementById('external-controls').classList.toggle('active', external);
       document.getElementById('source-notice').classList.toggle('active', external);
       document.getElementById('unconfirmed-control').style.display = external ? 'block' : 'none';
