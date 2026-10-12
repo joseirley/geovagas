@@ -63,9 +63,9 @@ def normalize_state(value):
     return None
 
 
-def classify_date(value, now=None):
+def classify_date(value, now=None, hours_old=HOURS_OLD):
     """Return (status, UTC timestamp). Date-only values are confirmed only when
-    their UTC calendar date falls within the three-day window.
+    their UTC calendar date falls within the selected window.
     """
     now = now or datetime.now(timezone.utc)
     if now.tzinfo is None:
@@ -103,9 +103,9 @@ def classify_date(value, now=None):
     if parsed > now:
         return "future", parsed.isoformat()
     if date_only:
-        cutoff_day = now.date() - timedelta(days=2)
+        cutoff_day = now.date() - timedelta(days=max(0, (hours_old + 23) // 24 - 1))
         return ("recent", parsed.isoformat()) if parsed.date() >= cutoff_day else ("unconfirmed", parsed.isoformat())
-    cutoff = now - timedelta(hours=HOURS_OLD)
+    cutoff = now - timedelta(hours=hours_old)
     if parsed >= cutoff:
         return "recent", parsed.isoformat()
     return "old", parsed.isoformat()
@@ -134,11 +134,11 @@ def _safe_url(value):
         return ""
 
 
-def _normalize_record(row, site, now):
+def _normalize_record(row, site, now, hours_old=HOURS_OLD):
     normalized_columns = {str(key).casefold(): value for key, value in row.items()}
     get = normalized_columns.get
     raw_date = get("date_posted")
-    date_status, published_utc = classify_date(raw_date, now)
+    date_status, published_utc = classify_date(raw_date, now, hours_old)
     city = _as_text(get("city"))
     state = normalize_state(get("state"))
     country = _as_text(get("country"))
@@ -240,21 +240,27 @@ def _geocode_municipality(city, state):
         return coordinates
 
 
-def _query_cache_key(site, term, location, fetch_description):
-    return (site, _fold(term), _fold(location), HOURS_OLD, RESULTS_WANTED, bool(fetch_description))
+def _query_cache_key(site, term, location, fetch_description, hours_old):
+    return (site, _fold(term), _fold(location), hours_old, RESULTS_WANTED, bool(fetch_description))
 
 
-def search_jobs(site, search_term, location, fetch_description=False, now=None):
+def search_jobs(site, search_term, location, fetch_description=False, now=None, hours_old=HOURS_OLD):
     """Query exactly one JobSpy platform, validate, geocode, and cache output."""
     site = str(site or "").casefold().strip()
     if site not in SUPPORTED_SITES:
         raise ValueError("Plataforma inválida. Use linkedin, indeed ou glassdoor.")
+    try:
+        hours_old = int(hours_old)
+    except (TypeError, ValueError):
+        raise ValueError("O período deve ser de 72 ou 168 horas.") from None
+    if hours_old not in {72, 168}:
+        raise ValueError("O período deve ser de 72 ou 168 horas.")
     term, location = str(search_term or "").strip(), str(location or "").strip()
     if not term:
         raise ValueError("Informe um cargo ou palavra-chave para pesquisar.")
     if len(term) > 160 or len(location) > 160:
         raise ValueError("Os campos de busca devem ter no máximo 160 caracteres.")
-    key = _query_cache_key(site, term, location, fetch_description)
+    key = _query_cache_key(site, term, location, fetch_description, hours_old)
     current_time = time_module.time()
     with _CACHE_LOCK:
         cached = _CACHE.get(key)
@@ -265,7 +271,7 @@ def search_jobs(site, search_term, location, fetch_description=False, now=None):
 
     kwargs = {
         "site_name": [site], "search_term": term, "location": location or "Brazil",
-        "hours_old": HOURS_OLD, "results_wanted": RESULTS_WANTED,
+        "hours_old": hours_old, "results_wanted": RESULTS_WANTED,
         "fetch_description": bool(fetch_description), "verbose": 0,
     }
     if SITE_CONFIG[site]["country_indeed"]:
@@ -276,7 +282,7 @@ def search_jobs(site, search_term, location, fetch_description=False, now=None):
         collected_at = collected_at.replace(tzinfo=timezone.utc)
     collected_at = collected_at.astimezone(timezone.utc)
     rows = frame.to_dict(orient="records") if hasattr(frame, "to_dict") else list(frame or [])
-    normalized = [_normalize_record(row, site, collected_at) for row in rows[:RESULTS_WANTED]]
+    normalized = [_normalize_record(row, site, collected_at, hours_old) for row in rows[:RESULTS_WANTED]]
 
     # Deduplicate only by validated normalized ad URL; retain same-title postings.
     unique, seen_urls = [], set()
@@ -317,7 +323,8 @@ def search_jobs(site, search_term, location, fetch_description=False, now=None):
         "recent_count": len(recent), "unconfirmed_count": len(unconfirmed),
         "recent_jobs": recent[:RESULTS_WANTED], "unconfirmed_jobs": unconfirmed[:RESULTS_WANTED],
         "map_unlocated_count": sum(job["latitude"] is None for job in recent),
-        "collected_at": collected_at.isoformat(), "hours_old": HOURS_OLD,
+        "unlocated_municipality_count": len({(_fold(job["city"]), job["state"]) for job in recent if job["latitude"] is None and job["city"] and job["state"]}),
+        "collected_at": collected_at.isoformat(), "hours_old": hours_old,
         "results_wanted": RESULTS_WANTED, "cache_ttl_seconds": CACHE_TTL_SECONDS,
         "cached": False,
     }
