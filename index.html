@@ -1344,14 +1344,15 @@
       document.getElementById('table-count-label').textContent = `Exibidos na lista: ${selected.length} • Exibidos no mapa: ${mapped}`;
 
       const tbody = document.getElementById('vagas-tbody');
-      document.querySelector('#vagas-table thead').innerHTML = '<tr><th>Cargo</th><th>Empresa</th><th>Localização</th><th>Data de publicação</th><th>Fonte</th><th>Validação</th><th>Anúncio</th></tr>';
+      document.querySelector('#vagas-table thead').innerHTML = '<tr><th>Cargo</th><th>Empresa</th><th>Localização</th><th>Data de publicação</th><th>Fonte</th><th>Validação</th><th>Anúncio</th><th>Link Direto</th></tr>';
       tbody.innerHTML = '';
-      if (!selected.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#64748b">Nenhuma vaga nesta localização. Faça uma busca ou clique fora dos pontos para ver todas.</td></tr>'; return; }
+      if (!selected.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#64748b">Nenhuma vaga nesta localização. Faça uma busca ou clique fora dos pontos para ver todas.</td></tr>'; return; }
       selected.forEach(job => {
         const tr = document.createElement('tr');
         const dateLabel = job.date_status === 'recent' ? 'Recente confirmada' : 'Data não confirmada';
-        const links = [job.job_url && `<a class="btn-apply" rel="noopener noreferrer" target="_blank" href="${safeText(job.job_url)}">Ver anúncio ↗</a>`, job.job_url_direct && `<a target="_blank" rel="noopener noreferrer" href="${safeText(job.job_url_direct)}">Link direto</a>`].filter(Boolean).join(' ');
-        tr.innerHTML = `<td>${safeText(job.title)}</td><td>${safeText(job.company)}</td><td>${safeText(job.location)}</td><td>${safeText(formatPostedDate(job.date_posted))}</td><td>${safeText(job.source)}</td><td>${safeText(dateLabel)}</td><td>${links || 'Link indisponível'}</td>`;
+        const jobLink = job.job_url ? `<a class="btn-apply" rel="noopener noreferrer" target="_blank" href="${safeText(job.job_url)}">Ver anúncio ↗</a>` : 'Link indisponível';
+        const directLink = job.job_url_direct ? `<a class="btn-apply" rel="noopener noreferrer" target="_blank" href="${safeText(job.job_url_direct)}">Abrir link ↗</a>` : '—';
+        tr.innerHTML = `<td>${safeText(job.title)}</td><td>${safeText(job.company)}</td><td>${safeText(job.location)}</td><td>${safeText(formatPostedDate(job.date_posted))}</td><td>${safeText(job.source)}</td><td>${safeText(dateLabel)}</td><td>${jobLink}</td><td>${directLink}</td>`;
         tbody.appendChild(tr);
       });
     }
@@ -1457,8 +1458,8 @@
       document.getElementById('job-progress').textContent = '';
       document.getElementById('badge-total').textContent = 'Busca limpa';
       document.getElementById('table-count-label').textContent = '';
-      document.querySelector('#vagas-table thead').innerHTML = '<tr><th>Cargo</th><th>Empresa</th><th>Localização</th><th>Data de publicação</th><th>Fonte</th><th>Validação</th><th>Anúncio</th></tr>';
-      document.getElementById('vagas-tbody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#64748b">Preencha os filtros e faça uma nova busca.</td></tr>';
+      document.querySelector('#vagas-table thead').innerHTML = '<tr><th>Cargo</th><th>Empresa</th><th>Localização</th><th>Data de publicação</th><th>Fonte</th><th>Validação</th><th>Anúncio</th><th>Link Direto</th></tr>';
+      document.getElementById('vagas-tbody').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#64748b">Preencha os filtros e faça uma nova busca.</td></tr>';
       if (markersCluster) markersCluster.clearLayers();
       if (circleLayer) { map.removeLayer(circleLayer); circleLayer = null; }
       externalCircles = new Map();
